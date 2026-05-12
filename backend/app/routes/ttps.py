@@ -1,0 +1,43 @@
+from flask import Blueprint, jsonify, request
+from app.services import ttp_service
+
+bp = Blueprint("ttps", __name__, url_prefix="/api/ttps")
+
+
+@bp.get("/")
+def list_ttps():
+    search = request.args.get("search")
+    tactic = request.args.get("tactic")
+    platform = request.args.get("platform")
+    ttps = ttp_service.list_ttps(search=search, tactic=tactic, platform=platform)
+    tactics = ttp_service.get_distinct_tactics()
+    return jsonify({"data": [t.to_dict() for t in ttps], "total": len(ttps), "tactics": tactics})
+
+
+@bp.post("/")
+def create_ttp():
+    data = request.get_json() or {}
+    for required in ("mitre_id", "name", "tactic"):
+        if not data.get(required):
+            return jsonify({"error": f"{required} is required"}), 400
+    ttp = ttp_service.create_ttp(data)
+    return jsonify(ttp.to_dict()), 201
+
+
+@bp.get("/<int:ttp_id>")
+def get_ttp(ttp_id):
+    ttp = ttp_service.get_ttp(ttp_id)
+    return jsonify(ttp.to_dict())
+
+
+@bp.put("/<int:ttp_id>")
+def update_ttp(ttp_id):
+    data = request.get_json() or {}
+    ttp = ttp_service.update_ttp(ttp_id, data)
+    return jsonify(ttp.to_dict())
+
+
+@bp.delete("/<int:ttp_id>")
+def delete_ttp(ttp_id):
+    ttp_service.delete_ttp(ttp_id)
+    return jsonify({}), 204

@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: ttptracker_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: baseline
+      POSTGRES_PASSWORD: baseline
+      POSTGRES_DB: baseline
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U baseline -d baseline"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ttptracker_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://baseline:baseline@db:5432/baseline
+      FLASK_APP: wsgi.py
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ./entrypoint.sh
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ttptracker_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: ""
+      VITE_BACKEND_PROXY: "http://backend:5000"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  postgres_data:
