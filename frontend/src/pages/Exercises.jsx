@@ -10,9 +10,9 @@ import TagBadge from "../components/ui/TagBadge";
 import Spinner from "../components/ui/Spinner";
 
 const STATUS_ACTIONS = {
-  planned:   [{ label: "Start", next: "active",    cls: "text-reddit-green  hover:text-green-400" }],
-  active:    [{ label: "Pause", next: "planned",   cls: "text-reddit-yellow hover:text-yellow-400" },
-              { label: "Stop",  next: "completed", cls: "text-reddit-red    hover:text-red-400" }],
+  planned:   [{ label: "Start", next: "active",    cls: "text-green-400 hover:text-green-300" }],
+  active:    [{ label: "Pause", next: "planned",   cls: "text-yellow-400 hover:text-yellow-300" },
+              { label: "Stop",  next: "completed", cls: "text-red-400 hover:text-red-300" }],
   completed: [],
 };
 
@@ -45,41 +45,41 @@ export default function Exercises() {
       <PageHeader
         title="Exercises"
         subtitle="Purple team engagements"
-        actions={<Button variant="orange" onClick={() => setShowCreate(true)}>+ New Exercise</Button>}
+        actions={<Button onClick={() => setShowCreate(true)}>+ New Exercise</Button>}
       />
 
       {isLoading && <Spinner />}
-      {error && <p className="text-reddit-red text-sm">Failed to load exercises.</p>}
+      {error && <p className="text-red-400 text-sm">Failed to load exercises.</p>}
 
       {!isLoading && exercises.length === 0 && (
-        <div className="text-center py-16 text-reddit-muted border border-reddit-border rounded-lg bg-reddit-card">
+        <div className="text-center py-16 text-slate-500 border border-slate-700 rounded-lg">
           No exercises yet. Create one to get started.
         </div>
       )}
 
       {!isLoading && exercises.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-reddit-border">
+        <div className="overflow-x-auto rounded-lg border border-slate-700">
           <table className="w-full text-sm">
-            <thead className="bg-reddit-surface border-b border-reddit-border">
+            <thead className="bg-slate-800 border-b border-slate-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Exercise</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Tags</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Start</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">End</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Exercise</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Tags</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Start</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">End</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
               {exercises.map((ex) => (
                 <tr
                   key={ex.id}
-                  className="border-b border-reddit-border bg-reddit-card hover:bg-reddit-hover cursor-pointer transition-colors select-none"
+                  className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer select-none"
                   onDoubleClick={() => navigate(`/exercises/${ex.id}`)}
                 >
                   <td className="px-4 py-3">
-                    <div className="text-reddit-text font-medium">{ex.name}</div>
-                    {ex.description && <div className="text-reddit-muted text-xs line-clamp-1">{ex.description}</div>}
+                    <div className="text-slate-200 font-medium">{ex.name}</div>
+                    {ex.description && <div className="text-slate-500 text-xs line-clamp-1">{ex.description}</div>}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
@@ -88,7 +88,7 @@ export default function Exercises() {
                         <button
                           key={label}
                           onClick={(e) => handleStatusChange(ex.id, next, e)}
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full border border-reddit-border bg-reddit-surface hover:bg-reddit-hover transition-colors ${cls}`}
+                          className={`text-xs font-medium px-2 py-0.5 rounded border border-slate-600 bg-slate-700 hover:bg-slate-600 transition-colors ${cls}`}
                         >
                           {label}
                         </button>
@@ -104,12 +104,12 @@ export default function Exercises() {
                       <span className="text-slate-600 text-xs">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-reddit-muted">{ex.start_date ?? "—"}</td>
-                  <td className="px-4 py-3 text-reddit-muted">{ex.end_date ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-400">{ex.start_date ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-400">{ex.end_date ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
                       <Button variant="ghost" className="text-xs px-2 py-1" onClick={(e) => handleEdit(ex, e)}>Edit</Button>
-                      <Button variant="ghost" className="text-xs px-2 py-1 text-reddit-red hover:text-red-400" onClick={(e) => handleDelete(ex.id, e)}>Delete</Button>
+                      <Button variant="ghost" className="text-xs px-2 py-1 text-red-400 hover:text-red-300" onClick={(e) => handleDelete(ex.id, e)}>Del</Button>
                     </div>
                   </td>
                 </tr>

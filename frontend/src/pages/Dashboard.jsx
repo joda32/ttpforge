@@ -15,7 +15,7 @@ export default function Dashboard() {
       <PageHeader title="Dashboard" subtitle="Purple team exercise overview" />
 
       {isLoading && <Spinner />}
-      {error && <p className="text-reddit-red text-sm">Failed to load data.</p>}
+      {error && <p className="text-red-400 text-sm">Failed to load data.</p>}
 
       {!isLoading && (
         <>
@@ -26,42 +26,42 @@ export default function Dashboard() {
             <StatCard label="Planned"   value={exercises.filter((e) => e.status === "planned").length} />
           </div>
 
-          <h2 className="text-sm font-semibold text-reddit-muted uppercase tracking-wider mb-3">All Exercises</h2>
+          <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">All Exercises</h2>
 
           {exercises.length === 0 && (
-            <p className="text-reddit-muted text-sm">
+            <p className="text-slate-500 text-sm">
               No exercises yet.{" "}
-              <button className="text-reddit-blue hover:underline" onClick={() => navigate("/exercises")}>
+              <button className="text-blue-400 hover:underline" onClick={() => navigate("/exercises")}>
                 Create one →
               </button>
             </p>
           )}
 
           {exercises.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-reddit-border">
+            <div className="overflow-x-auto rounded-lg border border-slate-700">
               <table className="w-full text-sm">
-                <thead className="bg-reddit-surface border-b border-reddit-border">
+                <thead className="bg-slate-800 border-b border-slate-700">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Exercise</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Start</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">End</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Exercise</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Start</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">End</th>
                   </tr>
                 </thead>
                 <tbody>
                   {exercises.map((ex) => (
                     <tr
                       key={ex.id}
-                      className="border-b border-reddit-border bg-reddit-card hover:bg-reddit-hover cursor-pointer transition-colors"
+                      className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer"
                       onClick={() => navigate(`/exercises/${ex.id}`)}
                     >
                       <td className="px-4 py-3">
-                        <div className="text-reddit-text font-medium">{ex.name}</div>
-                        {ex.description && <div className="text-reddit-muted text-xs line-clamp-1">{ex.description}</div>}
+                        <div className="text-slate-200 font-medium">{ex.name}</div>
+                        {ex.description && <div className="text-slate-500 text-xs line-clamp-1">{ex.description}</div>}
                       </td>
                       <td className="px-4 py-3"><Badge variant={ex.status} /></td>
-                      <td className="px-4 py-3 text-reddit-muted">{ex.start_date ?? "—"}</td>
-                      <td className="px-4 py-3 text-reddit-muted">{ex.end_date ?? "—"}</td>
+                      <td className="px-4 py-3 text-slate-400">{ex.start_date ?? "—"}</td>
+                      <td className="px-4 py-3 text-slate-400">{ex.end_date ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>

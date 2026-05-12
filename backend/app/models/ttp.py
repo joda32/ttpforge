@@ -18,6 +18,7 @@ class TTP(db.Model):
     )
 
     entries = db.relationship("ExerciseEntry", back_populates="ttp", lazy="dynamic")
+    tactics = db.relationship("Tactic", secondary="ttp_tactics", lazy="subquery")
 
     def to_dict(self):
         return {
@@ -25,6 +26,7 @@ class TTP(db.Model):
             "mitre_id": self.mitre_id,
             "name": self.name,
             "tactic": self.tactic,
+            "tactics": [t.to_dict() for t in self.tactics],
             "description": self.description,
             "platform": self.platform,
         }
