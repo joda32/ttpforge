@@ -34,9 +34,6 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="px-5 py-4 border-t border-slate-700 text-xs text-slate-600">
-        MITRE ATT&amp;CK® Framework
-      </div>
     </aside>
   );
 }
