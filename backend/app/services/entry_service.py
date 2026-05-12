@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from app.extensions import db
 from app.models.exercise_entry import ExerciseEntry
 from app.models.ttp import TTP
+from app.services.tag_service import set_tags
 
 
 def list_entries(exercise_id, outcome=None, tactic=None):
@@ -41,6 +42,8 @@ def create_entry(data):
         gap_identified=data.get("gap_identified"),
     )
     db.session.add(entry)
+    db.session.flush()
+    set_tags(entry, data.get("tag_ids"))
     db.session.commit()
     return entry
 
@@ -59,6 +62,7 @@ def update_entry(entry_id, data):
         entry.executed_at = _parse_dt(data["executed_at"])
     if "detected_at" in data:
         entry.detected_at = _parse_dt(data["detected_at"])
+    set_tags(entry, data.get("tag_ids"))
     db.session.commit()
     return entry
 

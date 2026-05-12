@@ -5,6 +5,7 @@ import Exercises from "./pages/Exercises";
 import ExerciseDetail from "./pages/ExerciseDetail";
 import TTPLibrary from "./pages/TTPLibrary";
 import Reports from "./pages/Reports";
+import Tags from "./pages/Tags";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/exercises/:id" element={<ExerciseDetail />} />
           <Route path="/ttps" element={<TTPLibrary />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/tags" element={<Tags />} />
           <Route path="*" element={<p className="text-slate-400">Page not found.</p>} />
         </Routes>
       </main>

@@ -2,6 +2,7 @@ from datetime import date
 from app.extensions import db
 from app.models.exercise import Exercise
 from app.models.exercise_entry import ExerciseEntry
+from app.services.tag_service import set_tags
 
 
 def list_exercises():
@@ -21,6 +22,8 @@ def create_exercise(data):
         status=data.get("status", "planned"),
     )
     db.session.add(exercise)
+    db.session.flush()
+    set_tags(exercise, data.get("tag_ids"))
     db.session.commit()
     return exercise
 
@@ -34,6 +37,7 @@ def update_exercise(exercise_id, data):
         exercise.start_date = _parse_date(data["start_date"])
     if "end_date" in data:
         exercise.end_date = _parse_date(data["end_date"])
+    set_tags(exercise, data.get("tag_ids"))
     db.session.commit()
     return exercise
 

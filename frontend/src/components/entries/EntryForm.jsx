@@ -3,6 +3,7 @@ import { useTTPs } from "../../hooks/useTTPs";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 import Button from "../ui/Button";
+import TagSelector from "../ui/TagSelector";
 
 const OUTCOME_OPTIONS = [
   { value: "", label: "— Not set —" },
@@ -39,6 +40,7 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
     blue_notes: initial.blue_notes ?? "",
     outcome: initial.outcome ?? "",
     gap_identified: initial.gap_identified ?? "",
+    tag_ids: initial.tags?.map((t) => t.id) ?? [],
   });
 
   const set = (k) => (e) => {
@@ -212,6 +214,11 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
           </div>
         </div>
       )}
+
+      <TagSelector
+        value={form.tag_ids}
+        onChange={(ids) => setForm((f) => ({ ...f, tag_ids: ids }))}
+      />
 
       <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>

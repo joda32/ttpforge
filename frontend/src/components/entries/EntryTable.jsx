@@ -1,5 +1,6 @@
 import EntryRow from "./EntryRow";
 
+
 export default function EntryTable({ entries, onEdit, onDelete }) {
   if (entries.length === 0) {
     return (
@@ -15,6 +16,7 @@ export default function EntryTable({ entries, onEdit, onDelete }) {
         <thead className="bg-slate-800 border-b border-slate-700">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">TTP</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Tags</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Red Team</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Blue Team</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Outcome</th>

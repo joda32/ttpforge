@@ -6,6 +6,7 @@ import ExerciseForm from "../components/exercises/ExerciseForm";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
+import TagBadge from "../components/ui/TagBadge";
 import Spinner from "../components/ui/Spinner";
 
 const STATUS_ACTIONS = {
@@ -63,6 +64,7 @@ export default function Exercises() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Exercise</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Tags</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Start</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">End</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-reddit-muted uppercase tracking-wider">Actions</th>
@@ -92,6 +94,15 @@ export default function Exercises() {
                         </button>
                       ))}
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {ex.tags?.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {ex.tags.map((t) => <TagBadge key={t.id} tag={t} />)}
+                      </div>
+                    ) : (
+                      <span className="text-slate-600 text-xs">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-reddit-muted">{ex.start_date ?? "—"}</td>
                   <td className="px-4 py-3 text-reddit-muted">{ex.end_date ?? "—"}</td>

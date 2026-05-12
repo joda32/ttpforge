@@ -52,6 +52,7 @@ class ExerciseEntry(db.Model):
 
     exercise = db.relationship("Exercise", back_populates="entries")
     ttp = db.relationship("TTP", back_populates="entries")
+    tags = db.relationship("Tag", secondary="entry_tags", lazy="subquery")
 
     def time_to_detect_minutes(self):
         if self.executed_at and self.detected_at:
@@ -79,6 +80,7 @@ class ExerciseEntry(db.Model):
             "blue_notes": self.blue_notes,
             "outcome": self.outcome,
             "gap_identified": self.gap_identified,
+            "tags": [t.to_dict() for t in self.tags],
             "time_to_detect_minutes": self.time_to_detect_minutes(),
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),

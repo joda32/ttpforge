@@ -33,6 +33,7 @@ class Exercise(db.Model):
         cascade="all, delete-orphan",
         lazy="dynamic",
     )
+    tags = db.relationship("Tag", secondary="exercise_tags", lazy="subquery")
 
     def to_dict(self):
         return {
@@ -42,6 +43,7 @@ class Exercise(db.Model):
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
             "status": self.status,
+            "tags": [t.to_dict() for t in self.tags],
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }

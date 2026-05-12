@@ -2,6 +2,7 @@ import { useState } from "react";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 import Button from "../ui/Button";
+import TagSelector from "../ui/TagSelector";
 
 const STATUS_OPTIONS = [
   { value: "planned", label: "Planned" },
@@ -16,6 +17,7 @@ export default function ExerciseForm({ initial = {}, onSubmit, onCancel, loading
     start_date: initial.start_date ?? "",
     end_date: initial.end_date ?? "",
     status: initial.status ?? "planned",
+    tag_ids: initial.tags?.map((t) => t.id) ?? [],
   });
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -43,6 +45,7 @@ export default function ExerciseForm({ initial = {}, onSubmit, onCancel, loading
         <Input label="End Date" type="date" value={form.end_date} onChange={set("end_date")} />
       </div>
       <Select label="Status" value={form.status} onChange={set("status")} options={STATUS_OPTIONS} />
+      <TagSelector value={form.tag_ids} onChange={(ids) => setForm((f) => ({ ...f, tag_ids: ids }))} />
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
         <Button type="submit" disabled={loading}>{loading ? "Saving…" : "Save"}</Button>

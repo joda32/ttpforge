@@ -1,5 +1,6 @@
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
+import TagBadge from "../ui/TagBadge";
 
 function fmt(isoStr) {
   if (!isoStr) return "—";
@@ -13,6 +14,15 @@ export default function EntryRow({ entry, onEdit, onDelete }) {
         <div className="font-mono text-xs text-blue-400">{entry.ttp?.mitre_id}</div>
         <div className="text-sm text-slate-200 font-medium">{entry.ttp?.name}</div>
         <div className="text-xs text-slate-500">{entry.ttp?.tactic}</div>
+      </td>
+      <td className="px-4 py-3">
+        {entry.tags?.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {entry.tags.map((t) => <TagBadge key={t.id} tag={t} />)}
+          </div>
+        ) : (
+          <span className="text-slate-600 text-xs">—</span>
+        )}
       </td>
       <td className="px-4 py-3 text-xs text-slate-400">
         {entry.tool_used && <div className="font-medium text-slate-300">{entry.tool_used}</div>}
