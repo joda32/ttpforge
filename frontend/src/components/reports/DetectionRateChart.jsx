@@ -1,4 +1,4 @@
-export default function DetectionRateChart({ tacticBreakdown }) {
+﻿export default function DetectionRateChart({ tacticBreakdown }) {
   const tactics = Object.entries(tacticBreakdown ?? {});
   if (tactics.length === 0) {
     return <p className="text-slate-500 text-sm">No tactic data yet.</p>;

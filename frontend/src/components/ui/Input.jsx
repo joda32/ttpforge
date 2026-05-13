@@ -1,4 +1,4 @@
-export default function Input({ label, className = "", ...props }) {
+﻿export default function Input({ label, className = "", ...props }) {
   return (
     <div className="flex flex-col gap-1">
       {label && <label className="text-xs text-slate-400 font-medium">{label}</label>}

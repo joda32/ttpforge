@@ -51,3 +51,40 @@ def get_entries(exercise_id):
     tactic = request.args.get("tactic")
     entries = entry_service.list_entries(exercise_id, outcome=outcome, tactic=tactic)
     return jsonify({"data": [e.to_dict() for e in entries], "total": len(entries)})
+
+
+@bp.post("/<int:exercise_id>/import-template")
+def import_template(exercise_id):
+    from app.extensions import db
+    from app.models import Exercise, ExerciseEntry
+    from app.models.ttp import TTP
+
+    if not Exercise.query.get(exercise_id):
+        return jsonify({"error": "Exercise not found"}), 404
+
+    body = request.get_json(silent=True) or {}
+    items = body.get("entries", [])
+    if not isinstance(items, list):
+        return jsonify({"error": "entries must be a list"}), 400
+
+    imported, skipped = [], []
+    for item in items:
+        mitre_id = (item.get("mitre_id") or "").strip()
+        if not mitre_id:
+            skipped.append({"mitre_id": mitre_id, "reason": "missing mitre_id"})
+            continue
+        ttp = TTP.query.filter_by(mitre_id=mitre_id).first()
+        if not ttp:
+            skipped.append({"mitre_id": mitre_id, "reason": "TTP not found in library"})
+            continue
+        entry = ExerciseEntry(
+            exercise_id=exercise_id,
+            ttp_id=ttp.id,
+            tool_used=item.get("tool_used") or None,
+            command_used=item.get("command_used") or None,
+        )
+        db.session.add(entry)
+        imported.append(mitre_id)
+
+    db.session.commit()
+    return jsonify({"imported": len(imported), "skipped": skipped}), 201

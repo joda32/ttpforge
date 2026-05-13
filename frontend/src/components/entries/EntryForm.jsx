@@ -1,9 +1,11 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useTTPs } from "../../hooks/useTTPs";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
+import Combobox from "../ui/Combobox";
 import Button from "../ui/Button";
 import TagSelector from "../ui/TagSelector";
+import ImageUploader from "./ImageUploader";
 
 const OUTCOME_OPTIONS = [
   { value: "", label: "— Not set —" },
@@ -73,12 +75,12 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Select
+      <Combobox
         label="TTP *"
         value={form.ttp_id}
-        onChange={set("ttp_id")}
+        onChange={(val) => setForm((f) => ({ ...f, ttp_id: val }))}
         options={ttpOptions}
-        placeholder="Select a TTP…"
+        placeholder="Search by MITRE ID or technique name…"
         required
       />
 
@@ -219,6 +221,8 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
         value={form.tag_ids}
         onChange={(ids) => setForm((f) => ({ ...f, tag_ids: ids }))}
       />
+
+      {initial.id && <ImageUploader entryId={initial.id} />}
 
       <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>

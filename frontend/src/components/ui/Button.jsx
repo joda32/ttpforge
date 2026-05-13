@@ -1,4 +1,4 @@
-const VARIANTS = {
+﻿const VARIANTS = {
   primary: "bg-blue-600 hover:bg-blue-500 text-white",
   secondary: "bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600",
   danger: "bg-red-700 hover:bg-red-600 text-white",

@@ -1,4 +1,4 @@
-import Badge from "../ui/Badge";
+﻿import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import TagBadge from "../ui/TagBadge";
 
@@ -7,9 +7,23 @@ function fmt(isoStr) {
   return new Date(isoStr).toLocaleString();
 }
 
-export default function EntryRow({ entry, onEdit, onDelete }) {
+export default function EntryRow({ entry, onEdit, onDelete, selected, onToggleSelect }) {
   return (
-    <tr className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors">
+    <tr
+      className={`border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer select-none ${selected ? "bg-slate-800/70" : ""}`}
+      onDoubleClick={() => onEdit(entry)}
+    >
+      {onToggleSelect && (
+        <td className="px-3 py-3 w-8">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={(e) => { e.stopPropagation(); onToggleSelect(); }}
+            onClick={(e) => e.stopPropagation()}
+            className="rounded border-slate-500 bg-slate-700 accent-blue-500 cursor-pointer"
+          />
+        </td>
+      )}
       <td className="px-4 py-3">
         <div className="font-mono text-xs text-blue-400">{entry.ttp?.mitre_id}</div>
         <div className="text-sm text-slate-200 font-medium">{entry.ttp?.name}</div>
@@ -45,8 +59,8 @@ export default function EntryRow({ entry, onEdit, onDelete }) {
       </td>
       <td className="px-4 py-3">
         <div className="flex gap-1">
-          <Button variant="ghost" className="text-xs px-2 py-1" onClick={() => onEdit(entry)}>Edit</Button>
-          <Button variant="ghost" className="text-xs px-2 py-1 text-red-400 hover:text-red-300" onClick={() => onDelete(entry.id)}>Del</Button>
+          <Button variant="ghost" className="text-xs px-2 py-1" onClick={(e) => { e.stopPropagation(); onEdit(entry); }}>Edit</Button>
+          <Button variant="ghost" className="text-xs px-2 py-1 text-red-400 hover:text-red-300" onClick={(e) => { e.stopPropagation(); onDelete(entry.id); }}>Del</Button>
         </div>
       </td>
     </tr>

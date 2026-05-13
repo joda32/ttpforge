@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { useExercises } from "../hooks/useExercises";
 import PageHeader from "../components/layout/PageHeader";
 import StatCard from "../components/ui/StatCard";

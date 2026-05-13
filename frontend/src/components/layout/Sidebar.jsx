@@ -4,8 +4,8 @@ const NAV = [
   { to: "/", label: "Dashboard", icon: "▦" },
   { to: "/exercises", label: "Exercises", icon: "⚔" },
   { to: "/ttps", label: "TTP Library", icon: "☰" },
-  { to: "/reports", label: "Reports", icon: "📊" },
-  { to: "/tags", label: "Tags", icon: "🏷" },
+  { to: "/reports", label: "Reports", icon: "≋" },
+  { to: "/tags", label: "Tags", icon: "◈" },
 ];
 
 export default function Sidebar() {

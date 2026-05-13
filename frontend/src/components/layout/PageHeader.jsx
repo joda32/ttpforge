@@ -1,4 +1,4 @@
-export default function PageHeader({ title, subtitle, actions }) {
+﻿export default function PageHeader({ title, subtitle, actions }) {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>

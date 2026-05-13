@@ -1,4 +1,4 @@
-const OUTCOME_STYLE = {
+﻿const OUTCOME_STYLE = {
   detected: { border: "border-green-600",  bg: "bg-green-900/30",  dot: "bg-green-500",  text: "text-green-400" },
   missed:   { border: "border-red-600",    bg: "bg-red-900/30",    dot: "bg-red-500",    text: "text-red-400" },
   partial:  { border: "border-yellow-600", bg: "bg-yellow-900/30", dot: "bg-yellow-500", text: "text-yellow-400" },
@@ -53,7 +53,7 @@ function AttackNode({ entry, step }) {
         <div className="mt-2 pt-2 border-t border-slate-700/60 space-y-0.5">
           {entry.tool_used && (
             <div className="text-xs text-slate-400 truncate" title={entry.tool_used}>
-              🔧 {entry.tool_used}
+              ðŸ”§ {entry.tool_used}
             </div>
           )}
           {(entry.source || entry.destination) && (

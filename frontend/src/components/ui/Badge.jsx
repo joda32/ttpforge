@@ -1,4 +1,4 @@
-const VARIANTS = {
+﻿const VARIANTS = {
   detected: "bg-green-900 text-green-300 border border-green-700",
   missed: "bg-red-900 text-red-300 border border-red-700",
   partial: "bg-yellow-900 text-yellow-300 border border-yellow-700",

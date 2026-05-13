@@ -1,8 +1,9 @@
-import { useState } from "react";
+﻿import { useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useExercise, useExerciseSummary, useExerciseEntries } from "../hooks/useExercises";
 import { useCreateEntry, useUpdateEntry, useDeleteEntry } from "../hooks/useEntries";
-import { exportEntriesCSV } from "../api/entries";
+import { exportEntriesCSV, importTemplate } from "../api/entries";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../components/layout/PageHeader";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -28,16 +29,19 @@ export default function ExerciseDetail() {
   const { id } = useParams();
   const exerciseId = Number(id);
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
   const [activeTab, setActiveTab] = useState(0);
   const [filters, setFilters] = useState({ outcome: "", tactic: "" });
   const [showAddEntry, setShowAddEntry] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [importResult, setImportResult] = useState(null);
+  const importFileRef = useRef(null);
 
   const { data: exercise, isLoading: loadingEx } = useExercise(exerciseId);
   const { data: summary } = useExerciseSummary(exerciseId);
 
-  // Entries tab uses filters; matrix and map use unfiltered data
   const { data: filteredData, isLoading: loadingFiltered } = useExerciseEntries(exerciseId, {
     ...(filters.outcome && { outcome: filters.outcome }),
     ...(filters.tactic  && { tactic:  filters.tactic }),
@@ -47,6 +51,15 @@ export default function ExerciseDetail() {
   const createMutation = useCreateEntry(exerciseId);
   const updateMutation = useUpdateEntry(exerciseId);
   const deleteMutation = useDeleteEntry(exerciseId);
+
+  const importMutation = useMutation({
+    mutationFn: (entries) => importTemplate(exerciseId, entries),
+    onSuccess: (result) => {
+      setImportResult(result);
+      qc.invalidateQueries({ queryKey: ["exercises", exerciseId, "entries"] });
+      qc.invalidateQueries({ queryKey: ["exercises", exerciseId, "summary"] });
+    },
+  });
 
   const filteredEntries = filteredData?.data ?? [];
   const allEntries = allData?.data ?? [];
@@ -63,6 +76,62 @@ export default function ExerciseDetail() {
     : detectionPct >= 50
     ? "text-yellow-400"
     : "text-red-400";
+
+  // Selection helpers
+  const toggleSelect = (entryId) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(entryId) ? next.delete(entryId) : next.add(entryId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const allIds = filteredEntries.map((e) => e.id);
+    const allSelected = allIds.every((id) => selectedIds.has(id));
+    setSelectedIds(allSelected ? new Set() : new Set(allIds));
+  };
+
+  // Export selected entries as JSON template
+  const handleExport = () => {
+    const toExport = filteredEntries.filter((e) => selectedIds.has(e.id));
+    const payload = {
+      version: 1,
+      exported_at: new Date().toISOString(),
+      entries: toExport.map((e) => ({
+        mitre_id: e.ttp?.mitre_id ?? "",
+        ttp_name: e.ttp?.name ?? "",
+        tactic: e.ttp?.tactic ?? "",
+        tool_used: e.tool_used ?? "",
+        command_used: e.command_used ?? "",
+      })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${exercise?.name ?? "exercise"}-template.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Import template from JSON file
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const json = JSON.parse(ev.target.result);
+        const entries = Array.isArray(json) ? json : json.entries ?? [];
+        importMutation.mutate(entries);
+      } catch {
+        setImportResult({ error: "Invalid JSON file" });
+      }
+    };
+    reader.readAsText(file);
+  };
 
   if (loadingEx) return <Spinner />;
   if (!exercise) return <p className="text-red-400">Exercise not found.</p>;
@@ -131,7 +200,7 @@ export default function ExerciseDetail() {
       {/* Tab: Entries */}
       {activeTab === 0 && (
         <>
-          <div className="flex flex-wrap gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
             <Select
               value={filters.outcome}
               onChange={(e) => setFilters((f) => ({ ...f, outcome: e.target.value }))}
@@ -149,7 +218,61 @@ export default function ExerciseDetail() {
                 Clear
               </Button>
             )}
+
+            <div className="ml-auto flex items-center gap-2">
+              {selectedIds.size > 0 && (
+                <Button variant="secondary" onClick={handleExport}>
+                  Export {selectedIds.size} Selected
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                onClick={() => importFileRef.current?.click()}
+                disabled={importMutation.isPending}
+              >
+                {importMutation.isPending ? "Importing…" : "Import Template"}
+              </Button>
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleImportFile}
+              />
+            </div>
           </div>
+
+          {/* Import result banner */}
+          {importResult && (
+            <div className={`mb-4 px-4 py-3 rounded-lg border text-sm flex items-start justify-between gap-3 ${
+              importResult.error
+                ? "bg-red-900/30 border-red-700 text-red-300"
+                : "bg-green-900/30 border-green-700 text-green-300"
+            }`}>
+              <div>
+                {importResult.error ? (
+                  <span>{importResult.error}</span>
+                ) : (
+                  <>
+                    <span className="font-medium">{importResult.imported} {importResult.imported === 1 ? "entry" : "entries"} imported.</span>
+                    {importResult.skipped?.length > 0 && (
+                      <span className="text-slate-400 ml-2">
+                        {importResult.skipped.length} skipped ({importResult.skipped.map((s) => s.mitre_id || "unknown").join(", ")}).
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setImportResult(null)}
+                className="text-slate-400 hover:text-slate-200 shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {loadingFiltered ? (
             <Spinner />
           ) : (
@@ -159,6 +282,9 @@ export default function ExerciseDetail() {
               onDelete={(entryId) => {
                 if (window.confirm("Delete this entry?")) deleteMutation.mutate(entryId);
               }}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onSelectAll={toggleSelectAll}
             />
           )}
         </>
