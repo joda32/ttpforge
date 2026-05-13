@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useExercise, useExerciseSummary, useExerciseEntries } from "../hooks/useExercises";
 import { useCreateEntry, useUpdateEntry, useDeleteEntry } from "../hooks/useEntries";
-import { exportEntriesCSV, importTemplate } from "../api/entries";
+import { exportEntriesCSV, importTemplate, importNavigatorLayer } from "../api/entries";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../components/layout/PageHeader";
 import Badge from "../components/ui/Badge";
@@ -38,6 +38,7 @@ export default function ExerciseDetail() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [importResult, setImportResult] = useState(null);
   const importFileRef = useRef(null);
+  const navigatorFileRef = useRef(null);
 
   const { data: exercise, isLoading: loadingEx } = useExercise(exerciseId);
   const { data: summary } = useExerciseSummary(exerciseId);
@@ -55,7 +56,16 @@ export default function ExerciseDetail() {
   const importMutation = useMutation({
     mutationFn: (entries) => importTemplate(exerciseId, entries),
     onSuccess: (result) => {
-      setImportResult(result);
+      setImportResult({ ...result, source: "template" });
+      qc.invalidateQueries({ queryKey: ["exercises", exerciseId, "entries"] });
+      qc.invalidateQueries({ queryKey: ["exercises", exerciseId, "summary"] });
+    },
+  });
+
+  const navigatorMutation = useMutation({
+    mutationFn: (layer) => importNavigatorLayer(exerciseId, layer),
+    onSuccess: (result) => {
+      setImportResult({ ...result, source: "navigator" });
       qc.invalidateQueries({ queryKey: ["exercises", exerciseId, "entries"] });
       qc.invalidateQueries({ queryKey: ["exercises", exerciseId, "summary"] });
     },
@@ -126,6 +136,27 @@ export default function ExerciseDetail() {
         const json = JSON.parse(ev.target.result);
         const entries = Array.isArray(json) ? json : json.entries ?? [];
         importMutation.mutate(entries);
+      } catch {
+        setImportResult({ error: "Invalid JSON file" });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Import ATT&CK Navigator layer JSON
+  const handleNavigatorFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const layer = JSON.parse(ev.target.result);
+        if (!layer.techniques) {
+          setImportResult({ error: "Not a valid Navigator layer file (missing 'techniques')" });
+          return;
+        }
+        navigatorMutation.mutate(layer);
       } catch {
         setImportResult({ error: "Invalid JSON file" });
       }
@@ -239,6 +270,20 @@ export default function ExerciseDetail() {
                 className="hidden"
                 onChange={handleImportFile}
               />
+              <Button
+                variant="secondary"
+                onClick={() => navigatorFileRef.current?.click()}
+                disabled={navigatorMutation.isPending}
+              >
+                {navigatorMutation.isPending ? "Importing…" : "Import Navigator Layer"}
+              </Button>
+              <input
+                ref={navigatorFileRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleNavigatorFile}
+              />
             </div>
           </div>
 
@@ -254,7 +299,7 @@ export default function ExerciseDetail() {
                   <span>{importResult.error}</span>
                 ) : (
                   <>
-                    <span className="font-medium">{importResult.imported} {importResult.imported === 1 ? "entry" : "entries"} imported.</span>
+                    <span className="font-medium">{importResult.imported} {importResult.imported === 1 ? "entry" : "entries"} imported{importResult.source === "navigator" ? " from Navigator layer" : ""}.</span>
                     {importResult.skipped?.length > 0 && (
                       <span className="text-slate-400 ml-2">
                         {importResult.skipped.length} skipped ({importResult.skipped.map((s) => s.mitre_id || "unknown").join(", ")}).

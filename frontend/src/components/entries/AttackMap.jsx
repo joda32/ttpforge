@@ -1,5 +1,10 @@
+import { useRef, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reorderAttackPath, removeFromAttackPath } from "../../api/entries";
+
+const NODE_W = 192; // w-48
+const ARROW_W = 40; // arrow component width (mx-1 + w-6 + arrowhead)
+const CELL_W = NODE_W + ARROW_W; // width of one node+arrow unit
 
 const OUTCOME_STYLE = {
   detected: { border: "border-green-600",  bg: "bg-green-900/30",  dot: "bg-green-500",  text: "text-green-400" },
@@ -19,6 +24,42 @@ function Arrow() {
           borderTop: "5px solid transparent",
           borderBottom: "5px solid transparent",
           borderLeft: "8px solid #475569",
+        }}
+      />
+    </div>
+  );
+}
+
+// Connector rendered between rows: drops down from the right edge of the last node,
+// runs left along the bottom, then points down-right into the next row's first node.
+function RowWrapConnector({ rowLength }) {
+  // Right edge of the last node in the row (no trailing arrow on last node)
+  const rightEdge = (rowLength - 1) * CELL_W + NODE_W;
+  // Center the vertical drop on the last node's horizontal midpoint
+  const dropX = rightEdge - NODE_W / 2;
+
+  return (
+    <div className="relative" style={{ height: 28 }}>
+      {/* Vertical drop from last node */}
+      <div
+        className="absolute top-0 w-px bg-slate-600"
+        style={{ left: dropX, height: "100%" }}
+      />
+      {/* Horizontal run back to left */}
+      <div
+        className="absolute h-px bg-slate-600"
+        style={{ left: NODE_W / 2, right: `calc(100% - ${dropX}px)`, bottom: 0 }}
+      />
+      {/* Down-arrow at start of next row */}
+      <div
+        className="absolute"
+        style={{
+          left: NODE_W / 2 - 4,
+          bottom: -6,
+          width: 0, height: 0,
+          borderLeft: "5px solid transparent",
+          borderRight: "5px solid transparent",
+          borderTop: "8px solid #475569",
         }}
       />
     </div>
@@ -107,6 +148,21 @@ function AttackNode({ entry, step, isFirst, isLast, onMove, onRemove }) {
 
 export default function AttackMap({ entries, exerciseId }) {
   const qc = useQueryClient();
+  const containerRef = useRef(null);
+  const [cols, setCols] = useState(4);
+
+  // Recalculate columns whenever the container resizes
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const measure = () => {
+      const w = containerRef.current.clientWidth;
+      setCols(Math.max(1, Math.floor(w / CELL_W)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   const reorderMutation = useMutation({
     mutationFn: (steps) => reorderAttackPath(exerciseId, steps),
@@ -131,20 +187,25 @@ export default function AttackMap({ entries, exerciseId }) {
     );
   }
 
-  const handleMove = (index, direction) => {
-    const next = [...pathEntries];
-    const swapIndex = index + direction;
-    if (swapIndex < 0 || swapIndex >= next.length) return;
+  const handleMove = (globalIndex, direction) => {
+    const swapIndex = globalIndex + direction;
+    if (swapIndex < 0 || swapIndex >= pathEntries.length) return;
 
-    const steps = next.map((e, i) => {
-      if (i === index) return { entry_id: e.id, attack_path_step: next[swapIndex].attack_path_step ?? swapIndex + 1 };
-      if (i === swapIndex) return { entry_id: e.id, attack_path_step: next[index].attack_path_step ?? index + 1 };
+    const steps = pathEntries.map((e, i) => {
+      if (i === globalIndex) return { entry_id: e.id, attack_path_step: pathEntries[swapIndex].attack_path_step ?? swapIndex + 1 };
+      if (i === swapIndex)   return { entry_id: e.id, attack_path_step: pathEntries[globalIndex].attack_path_step ?? globalIndex + 1 };
       return { entry_id: e.id, attack_path_step: e.attack_path_step ?? i + 1 };
     });
     reorderMutation.mutate(steps);
   };
 
-  // Summary counts for the legend bar
+  // Split into rows based on measured container width
+  const rows = [];
+  for (let i = 0; i < pathEntries.length; i += cols) {
+    rows.push(pathEntries.slice(i, i + cols));
+  }
+
+  // Summary counts
   const counts = { detected: 0, missed: 0, partial: 0, none: 0 };
   for (const e of pathEntries) {
     if (e.outcome) counts[e.outcome] = (counts[e.outcome] ?? 0) + 1;
@@ -152,7 +213,7 @@ export default function AttackMap({ entries, exerciseId }) {
   }
 
   return (
-    <div>
+    <div ref={containerRef}>
       {/* Summary bar */}
       <div className="flex items-center gap-4 mb-5 px-1">
         {[
@@ -166,29 +227,45 @@ export default function AttackMap({ entries, exerciseId }) {
             <span className="text-xs text-slate-400">{counts[key]} {label}</span>
           </div>
         ))}
-        <span className="ml-auto text-xs text-slate-600">Hover a node to move or remove it — scroll right to see full chain</span>
+        <span className="ml-auto text-xs text-slate-600">Hover a node to move or remove it</span>
       </div>
 
-      {/* Flow */}
-      <div className="overflow-x-auto pb-4 pt-5">
-        <div className="flex items-start min-w-max">
-          {pathEntries.map((entry, i) => (
-            <div key={entry.id} className="flex items-start">
-              <AttackNode
-                entry={entry}
-                step={entry.attack_path_step ?? i + 1}
-                isFirst={i === 0}
-                isLast={i === pathEntries.length - 1}
-                onMove={(dir) => handleMove(i, dir)}
-                onRemove={() => removeMutation.mutate(entry.id)}
-              />
-              {i < pathEntries.length - 1 && <Arrow />}
+      {/* Wrapped flow */}
+      <div className="pt-5">
+        {rows.map((row, rowIdx) => {
+          const globalOffset = rowIdx * cols;
+          return (
+            <div key={rowIdx}>
+              {/* Node row */}
+              <div className="flex items-start">
+                {row.map((entry, colIdx) => {
+                  const globalIndex = globalOffset + colIdx;
+                  return (
+                    <div key={entry.id} className="flex items-start">
+                      <AttackNode
+                        entry={entry}
+                        step={entry.attack_path_step ?? globalIndex + 1}
+                        isFirst={globalIndex === 0}
+                        isLast={globalIndex === pathEntries.length - 1}
+                        onMove={(dir) => handleMove(globalIndex, dir)}
+                        onRemove={() => removeMutation.mutate(entry.id)}
+                      />
+                      {colIdx < row.length - 1 && <Arrow />}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Wrap connector between rows */}
+              {rowIdx < rows.length - 1 && (
+                <RowWrapConnector rowLength={row.length} />
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Source/Destination network summary */}
+      {/* Network scope summary */}
       {pathEntries.some((e) => e.source || e.destination) && (
         <div className="mt-6 pt-4 border-t border-slate-700">
           <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">

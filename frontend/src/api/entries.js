@@ -6,6 +6,9 @@ export const importTemplate = (exerciseId, entries) =>
 export const updateEntry = (id, data) => client.put(`/api/entries/${id}`, data).then((r) => r.data);
 export const deleteEntry = (id) => client.delete(`/api/entries/${id}`);
 
+export const importNavigatorLayer = (exerciseId, layer) =>
+  client.post(`/api/exercises/${exerciseId}/import-navigator`, layer).then((r) => r.data);
+
 export const reorderAttackPath = (exerciseId, steps) =>
   client.patch(`/api/exercises/${exerciseId}/attack-path`, { steps }).then((r) => r.data);
 

@@ -90,6 +90,60 @@ def import_template(exercise_id):
     return jsonify({"imported": len(imported), "skipped": skipped}), 201
 
 
+@bp.post("/<int:exercise_id>/import-navigator")
+def import_navigator_layer(exercise_id):
+    from app.extensions import db
+    from app.models import Exercise, ExerciseEntry
+    from app.models.ttp import TTP
+    from sqlalchemy import func
+
+    if not Exercise.query.get(exercise_id):
+        return jsonify({"error": "Exercise not found"}), 404
+
+    body = request.get_json(silent=True) or {}
+    techniques = body.get("techniques")
+    if not isinstance(techniques, list):
+        return jsonify({"error": "Invalid Navigator layer: missing 'techniques' array"}), 400
+
+    # Determine starting step for attack path sequencing
+    max_step = db.session.query(func.max(ExerciseEntry.attack_path_step)).filter(
+        ExerciseEntry.exercise_id == exercise_id,
+        ExerciseEntry.attack_path_include == True,
+    ).scalar() or 0
+
+    imported, skipped = [], []
+    for tech in techniques:
+        if tech.get("enabled") is False:
+            continue
+        mitre_id = (tech.get("techniqueID") or "").strip().upper()
+        if not mitre_id:
+            continue
+
+        # Exact match first, then fall back to parent technique
+        ttp = TTP.query.filter(func.upper(TTP.mitre_id) == mitre_id).first()
+        if not ttp and "." in mitre_id:
+            parent_id = mitre_id.split(".")[0]
+            ttp = TTP.query.filter(func.upper(TTP.mitre_id) == parent_id).first()
+
+        if not ttp:
+            skipped.append({"mitre_id": mitre_id, "reason": "TTP not found in library"})
+            continue
+
+        max_step += 1
+        entry = ExerciseEntry(
+            exercise_id=exercise_id,
+            ttp_id=ttp.id,
+            red_notes=tech.get("comment") or None,
+            attack_path_include=True,
+            attack_path_step=max_step,
+        )
+        db.session.add(entry)
+        imported.append(mitre_id)
+
+    db.session.commit()
+    return jsonify({"imported": len(imported), "skipped": skipped}), 201
+
+
 @bp.patch("/<int:exercise_id>/attack-path")
 def reorder_attack_path(exercise_id):
     from app.services import entry_service
