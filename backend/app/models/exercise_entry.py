@@ -38,6 +38,10 @@ class ExerciseEntry(db.Model):
     )
     gap_identified = db.Column(db.Text)
 
+    # Attack path
+    attack_path_include = db.Column(db.Boolean, nullable=False, default=True)
+    attack_path_step = db.Column(db.Integer)
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -80,6 +84,8 @@ class ExerciseEntry(db.Model):
             "blue_notes": self.blue_notes,
             "outcome": self.outcome,
             "gap_identified": self.gap_identified,
+            "attack_path_include": self.attack_path_include,
+            "attack_path_step": self.attack_path_step,
             "tags": [t.to_dict() for t in self.tags],
             "time_to_detect_minutes": self.time_to_detect_minutes(),
             "created_at": self.created_at.isoformat(),

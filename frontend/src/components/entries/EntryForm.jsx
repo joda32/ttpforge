@@ -43,6 +43,8 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
     outcome: initial.outcome ?? "",
     gap_identified: initial.gap_identified ?? "",
     tag_ids: initial.tags?.map((t) => t.id) ?? [],
+    attack_path_include: initial.attack_path_include ?? true,
+    attack_path_step: initial.attack_path_step ?? "",
   });
 
   const set = (k) => (e) => {
@@ -67,6 +69,8 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
       executed_at: form.executed_at || null,
       detected_at: form.detected_at || null,
       outcome: form.outcome || null,
+      attack_path_include: form.attack_path_include,
+      attack_path_step: form.attack_path_include && form.attack_path_step ? Number(form.attack_path_step) : null,
     };
     onSubmit(payload);
   };
@@ -223,6 +227,33 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
       />
 
       {initial.id && <ImageUploader entryId={initial.id} />}
+
+      {/* Attack Path */}
+      <div className="border border-slate-700 rounded-lg p-3 flex flex-col gap-2">
+        <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={form.attack_path_include}
+            onChange={(e) => setForm((f) => ({ ...f, attack_path_include: e.target.checked, attack_path_step: e.target.checked ? f.attack_path_step : "" }))}
+            className="w-4 h-4 rounded border-slate-500 accent-blue-500"
+          />
+          <span className="text-sm text-slate-300 font-medium">Include in Attack Path</span>
+        </label>
+        {form.attack_path_include && (
+          <div className="flex items-center gap-2 ml-6">
+            <label className="text-xs text-slate-400 shrink-0">Step #</label>
+            <input
+              type="number"
+              min="1"
+              value={form.attack_path_step}
+              onChange={(e) => setForm((f) => ({ ...f, attack_path_step: e.target.value }))}
+              placeholder="Auto"
+              className="w-20 bg-slate-700 border border-slate-600 text-slate-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500"
+            />
+            <span className="text-xs text-slate-500">Leave blank to assign next step automatically</span>
+          </div>
+        )}
+      </div>
 
       <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>

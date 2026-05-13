@@ -88,3 +88,22 @@ def import_template(exercise_id):
 
     db.session.commit()
     return jsonify({"imported": len(imported), "skipped": skipped}), 201
+
+
+@bp.patch("/<int:exercise_id>/attack-path")
+def reorder_attack_path(exercise_id):
+    from app.services import entry_service
+    from app.models import Exercise
+    if not Exercise.query.get(exercise_id):
+        return jsonify({"error": "Exercise not found"}), 404
+    body = request.get_json(silent=True) or {}
+    steps = body.get("steps", [])
+    entry_service.reorder_attack_path(exercise_id, steps)
+    return jsonify({"ok": True})
+
+
+@bp.delete("/<int:exercise_id>/attack-path/<int:entry_id>")
+def remove_from_attack_path(exercise_id, entry_id):
+    from app.services import entry_service
+    entry = entry_service.remove_from_attack_path(entry_id)
+    return jsonify(entry.to_dict())

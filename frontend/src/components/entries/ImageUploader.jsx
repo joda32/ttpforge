@@ -77,7 +77,7 @@ export default function ImageUploader({ entryId }) {
             : "border-slate-600 hover:border-slate-500 hover:bg-slate-700/40"
         }`}
       >
-        <span className="text-2xl">ðŸ“Ž</span>
+        <span className="text-2xl">{"📷"}</span>
         <p className="text-xs text-slate-400">
           Drag & drop, <span className="text-blue-400 underline">browse</span>, or paste (Ctrl+V)
         </p>

@@ -6,6 +6,12 @@ export const importTemplate = (exerciseId, entries) =>
 export const updateEntry = (id, data) => client.put(`/api/entries/${id}`, data).then((r) => r.data);
 export const deleteEntry = (id) => client.delete(`/api/entries/${id}`);
 
+export const reorderAttackPath = (exerciseId, steps) =>
+  client.patch(`/api/exercises/${exerciseId}/attack-path`, { steps }).then((r) => r.data);
+
+export const removeFromAttackPath = (exerciseId, entryId) =>
+  client.delete(`/api/exercises/${exerciseId}/attack-path/${entryId}`).then((r) => r.data);
+
 export const exportEntriesCSV = async (exerciseId, exerciseName) => {
   const response = await client.get(`/api/exercises/${exerciseId}/entries`);
   const entries = response.data.data;

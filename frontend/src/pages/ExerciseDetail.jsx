@@ -294,7 +294,7 @@ export default function ExerciseDetail() {
       {activeTab === 1 && <MitreMatrix entries={allEntries} />}
 
       {/* Tab: Attack Map */}
-      {activeTab === 2 && <AttackMap entries={allEntries} />}
+      {activeTab === 2 && <AttackMap entries={allEntries} exerciseId={exerciseId} />}
 
       {/* Modals */}
       <Modal isOpen={showAddEntry} onClose={() => setShowAddEntry(false)} title="Add TTP Entry" wide>
