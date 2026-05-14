@@ -1,10 +1,10 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    TTP Tracker startup script for Windows.
+    TTPForge startup script for Windows.
 
 .DESCRIPTION
-    Manages the TTP Tracker Docker Compose stack.
+    Manages the TTPForge Docker Compose stack.
 
 .PARAMETER Check
     Verify that all requirements are installed and ports are available.
@@ -143,7 +143,7 @@ function Invoke-Check {
 # ── --init ────────────────────────────────────────────────────────────────────
 
 function Invoke-Init {
-    Write-Head "=== TTP Tracker — First-Time Setup ==="
+    Write-Head "=== TTPForge — First-Time Setup ==="
 
     Write-Info "Running requirement checks..."
     $checksOk = Invoke-Check
@@ -201,7 +201,7 @@ function Invoke-Init {
 
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
-    Write-Host "  TTP Tracker is ready!" -ForegroundColor Green
+    Write-Host "  TTPForge is ready!" -ForegroundColor Green
     Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
     Write-Host "  App:      http://localhost:5173" -ForegroundColor Cyan
@@ -217,7 +217,7 @@ function Invoke-Init {
 # ── --stop ────────────────────────────────────────────────────────────────────
 
 function Invoke-Stop {
-    Write-Head "=== Stopping TTP Tracker ==="
+    Write-Head "=== Stopping TTPForge ==="
     Invoke-Compose "down"
     Write-Ok "All containers stopped."
 }
@@ -225,7 +225,7 @@ function Invoke-Stop {
 # ── default start ─────────────────────────────────────────────────────────────
 
 function Invoke-Start {
-    Write-Head "=== Starting TTP Tracker ==="
+    Write-Head "=== Starting TTPForge ==="
 
     if (-not (Test-Path "docker-compose.yml")) {
         Write-Fail "docker-compose.yml not found. Run this script from the project root."

@@ -30,7 +30,7 @@ export default function Login() {
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-blue-400 font-bold text-2xl tracking-tight">TTP Tracker</div>
+          <div className="text-blue-400 font-bold text-2xl tracking-tight">TTPForge</div>
           <div className="text-slate-500 text-sm mt-1">Purple Team Exercise Log</div>
         </div>
 

@@ -1,15 +1,15 @@
 """
-OpenAPI 3.0 specification for the TTP Tracker API.
+OpenAPI 3.0 specification for the TTPForge API.
 Returned as JSON by GET /docs/api/openapi.json.
 """
 
 SPEC = {
     "openapi": "3.0.3",
     "info": {
-        "title": "TTP Tracker API",
+        "title": "TTPForge API",
         "version": "1.0.0",
         "description": (
-            "REST API for the TTP Tracker purple-team exercise platform.\n\n"
+            "REST API for the TTPForge purple-team exercise platform.\n\n"
             "## Authentication\n"
             "All endpoints except `/api/auth/login` and `/api/auth/signup` require a "
             "Bearer JWT token obtained from `POST /api/auth/login`.\n\n"

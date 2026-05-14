@@ -4,7 +4,7 @@ services:
 
   db:
     image: postgres:16-alpine
-    container_name: ttptracker_db
+    container_name: ttpforge_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: baseline
@@ -24,7 +24,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ttptracker_backend
+    container_name: ttpforge_backend
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://baseline:baseline@db:5432/baseline
@@ -45,7 +45,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: ttptracker_frontend
+    container_name: ttpforge_frontend
     restart: unless-stopped
     environment:
       VITE_API_BASE_URL: ""

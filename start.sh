@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TTP Tracker startup script for Linux (Debian/Ubuntu).
+# TTPForge startup script for Linux (Debian/Ubuntu).
 #
 # Usage:
 #   ./start.sh            # Start the application
@@ -120,7 +120,7 @@ do_check() {
 # ── --init ────────────────────────────────────────────────────────────────────
 
 do_init() {
-    head "=== TTP Tracker — First-Time Setup ==="
+    head "=== TTPForge — First-Time Setup ==="
 
     info "Running requirement checks..."
     if ! do_check; then
@@ -170,7 +170,7 @@ do_init() {
 
     echo ""
     printf "\e[32m========================================\e[0m\n"
-    printf "\e[32m  TTP Tracker is ready!\e[0m\n"
+    printf "\e[32m  TTPForge is ready!\e[0m\n"
     printf "\e[32m========================================\e[0m\n"
     echo ""
     printf "  \e[36mApp:      http://localhost:5173\e[0m\n"
@@ -186,7 +186,7 @@ do_init() {
 # ── --stop ────────────────────────────────────────────────────────────────────
 
 do_stop() {
-    head "=== Stopping TTP Tracker ==="
+    head "=== Stopping TTPForge ==="
     run_compose down
     ok "All containers stopped."
 }
@@ -194,7 +194,7 @@ do_stop() {
 # ── default start ─────────────────────────────────────────────────────────────
 
 do_start() {
-    head "=== Starting TTP Tracker ==="
+    head "=== Starting TTPForge ==="
 
     if [[ ! -f "docker-compose.yml" ]]; then
         fail "docker-compose.yml not found. Run this script from the project root."

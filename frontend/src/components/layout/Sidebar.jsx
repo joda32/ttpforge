@@ -28,7 +28,7 @@ export default function Sidebar() {
   return (
     <aside className="w-56 bg-slate-900 border-r border-slate-700 flex flex-col h-screen sticky top-0 shrink-0">
       <div className="px-5 py-5 border-b border-slate-700 shrink-0">
-        <div className="text-blue-400 font-bold text-lg tracking-tight">TTP Tracker</div>
+        <div className="text-blue-400 font-bold text-lg tracking-tight">TTPForge</div>
         <div className="text-slate-500 text-xs mt-0.5">Purple Team Exercise Log</div>
       </div>
       <nav className="flex-1 overflow-y-auto py-4 px-2 flex flex-col gap-1">

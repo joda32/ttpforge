@@ -33,7 +33,7 @@ export default function Signup() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
-          <div className="text-blue-400 font-bold text-2xl tracking-tight mb-2">TTP Tracker</div>
+          <div className="text-blue-400 font-bold text-2xl tracking-tight mb-2">TTPForge</div>
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl mt-6">
             <div className="text-green-400 text-lg font-semibold mb-2">Request submitted</div>
             <p className="text-slate-400 text-sm">Your account is pending approval by an administrator. You will be able to sign in once approved.</p>
@@ -50,7 +50,7 @@ export default function Signup() {
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-blue-400 font-bold text-2xl tracking-tight">TTP Tracker</div>
+          <div className="text-blue-400 font-bold text-2xl tracking-tight">TTPForge</div>
           <div className="text-slate-500 text-sm mt-1">Purple Team Exercise Log</div>
         </div>
 
