@@ -1,6 +1,7 @@
 ﻿import { useState } from "react";
 import { useTTPs } from "../hooks/useTTPs";
 import { useTactics, useMitreRefresh } from "../hooks/useTactics";
+import { useAuth } from "../hooks/useAuth";
 import PageHeader from "../components/layout/PageHeader";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
@@ -177,6 +178,8 @@ export default function TTPLibrary() {
   const [activeTab, setActiveTab] = useState(0);
   const refreshMutation = useMitreRefresh();
   const { data: ttpData } = useTTPs({});
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const handleRefresh = () => {
     refreshMutation.mutate(undefined, {
@@ -194,7 +197,7 @@ export default function TTPLibrary() {
       <PageHeader
         title="TTP Library"
         subtitle={`${ttpData?.total ?? 0} techniques`}
-        actions={
+        actions={isAdmin && (
           <Button
             variant="secondary"
             onClick={handleRefresh}
@@ -202,7 +205,7 @@ export default function TTPLibrary() {
           >
             {refreshMutation.isPending ? "Refreshing…" : "↻ Refresh from MITRE"}
           </Button>
-        }
+        )}
       />
 
       {/* Tabs */}

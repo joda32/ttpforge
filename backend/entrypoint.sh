@@ -19,5 +19,8 @@ flask db upgrade
 echo "Seeding TTPs..."
 python seeds/ttp_seed.py
 
+echo "Seeding users..."
+flask seed-users
+
 echo "Starting Flask..."
 exec flask run --host=0.0.0.0 --port=5000

@@ -33,29 +33,29 @@ function Arrow() {
 // Connector rendered between rows: drops down from the right edge of the last node,
 // runs left along the bottom, then points down-right into the next row's first node.
 function RowWrapConnector({ rowLength }) {
-  // Right edge of the last node in the row (no trailing arrow on last node)
   const rightEdge = (rowLength - 1) * CELL_W + NODE_W;
-  // Center the vertical drop on the last node's horizontal midpoint
   const dropX = rightEdge - NODE_W / 2;
 
+  // Height 36px: vertical drop fills top 28px, arrowhead occupies bottom 8px.
+  // mb-2 (8px) ensures the arrowhead tip has an 8px gap before the next row's nodes.
   return (
-    <div className="relative" style={{ height: 28 }}>
-      {/* Vertical drop from last node */}
+    <div className="relative mb-2" style={{ height: 36 }}>
+      {/* Vertical drop — stops at the horizontal run level */}
       <div
         className="absolute top-0 w-px bg-slate-600"
-        style={{ left: dropX, height: "100%" }}
+        style={{ left: dropX, height: "calc(100% - 8px)" }}
       />
-      {/* Horizontal run back to left */}
+      {/* Horizontal run back to first node — sits at the arrowhead base */}
       <div
         className="absolute h-px bg-slate-600"
-        style={{ left: NODE_W / 2, right: `calc(100% - ${dropX}px)`, bottom: 0 }}
+        style={{ left: NODE_W / 2, right: `calc(100% - ${dropX}px)`, bottom: 8 }}
       />
-      {/* Down-arrow at start of next row */}
+      {/* Down-arrow — tip at container bottom, base connects to horizontal run */}
       <div
         className="absolute"
         style={{
-          left: NODE_W / 2 - 4,
-          bottom: -6,
+          left: NODE_W / 2 - 5,
+          bottom: 0,
           width: 0, height: 0,
           borderLeft: "5px solid transparent",
           borderRight: "5px solid transparent",

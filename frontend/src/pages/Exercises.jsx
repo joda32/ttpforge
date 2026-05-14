@@ -1,6 +1,7 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useExercises, useCreateExercise, useUpdateExercise, useDeleteExercise } from "../hooks/useExercises";
+import { useAuth } from "../hooks/useAuth";
 import PageHeader from "../components/layout/PageHeader";
 import ExerciseForm from "../components/exercises/ExerciseForm";
 import Modal from "../components/ui/Modal";
@@ -18,6 +19,9 @@ const STATUS_ACTIONS = {
 
 export default function Exercises() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canWrite = user?.role !== "blue_team";
+  const isAdmin  = user?.role === "admin";
   const { data, isLoading, error } = useExercises();
   const exercises = data?.data ?? [];
 
@@ -45,7 +49,7 @@ export default function Exercises() {
       <PageHeader
         title="Exercises"
         subtitle="Purple team engagements"
-        actions={<Button onClick={() => setShowCreate(true)}>+ New Exercise</Button>}
+        actions={canWrite && <Button onClick={() => setShowCreate(true)}>+ New Exercise</Button>}
       />
 
       {isLoading && <Spinner />}
@@ -84,7 +88,7 @@ export default function Exercises() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <Badge variant={ex.status} />
-                      {(STATUS_ACTIONS[ex.status] ?? []).map(({ label, next, cls }) => (
+                      {canWrite && (STATUS_ACTIONS[ex.status] ?? []).map(({ label, next, cls }) => (
                         <button
                           key={label}
                           onClick={(e) => handleStatusChange(ex.id, next, e)}
@@ -108,8 +112,8 @@ export default function Exercises() {
                   <td className="px-4 py-3 text-slate-400">{ex.end_date ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <Button variant="ghost" className="text-xs px-2 py-1" onClick={(e) => handleEdit(ex, e)}>Edit</Button>
-                      <Button variant="ghost" className="text-xs px-2 py-1 text-red-400 hover:text-red-300" onClick={(e) => handleDelete(ex.id, e)}>Del</Button>
+                      {canWrite && <Button variant="ghost" className="text-xs px-2 py-1" onClick={(e) => handleEdit(ex, e)}>Edit</Button>}
+                      {isAdmin && <Button variant="ghost" className="text-xs px-2 py-1 text-red-400 hover:text-red-300" onClick={(e) => handleDelete(ex.id, e)}>Del</Button>}
                     </div>
                   </td>
                 </tr>

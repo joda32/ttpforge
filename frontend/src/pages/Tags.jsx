@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from "../hooks/useTags";
+import { useAuth } from "../hooks/useAuth";
 import PageHeader from "../components/layout/PageHeader";
 import Button from "../components/ui/Button";
 import TagBadge from "../components/ui/TagBadge";
@@ -45,13 +46,15 @@ export default function Tags() {
   const deleteMutation = useDeleteTag();
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   return (
     <div>
       <PageHeader
         title="Tags"
         subtitle="Manage tags for exercises and entries"
-        actions={<Button onClick={() => setShowCreate(true)}>+ New Tag</Button>}
+        actions={isAdmin && <Button onClick={() => setShowCreate(true)}>+ New Tag</Button>}
       />
 
       {isLoading && <Spinner />}
@@ -85,20 +88,22 @@ export default function Tags() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-1">
-                      <Button variant="ghost" className="text-xs px-2 py-1" onClick={() => setEditTarget(tag)}>
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="text-xs px-2 py-1 text-red-400 hover:text-red-300"
-                        onClick={() => {
-                          if (window.confirm(`Delete tag "${tag.name}"?`)) deleteMutation.mutate(tag.id);
-                        }}
-                      >
-                        Del
-                      </Button>
-                    </div>
+                    {isAdmin && (
+                      <div className="flex gap-1">
+                        <Button variant="ghost" className="text-xs px-2 py-1" onClick={() => setEditTarget(tag)}>
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="text-xs px-2 py-1 text-red-400 hover:text-red-300"
+                          onClick={() => {
+                            if (window.confirm(`Delete tag "${tag.name}"?`)) deleteMutation.mutate(tag.id);
+                          }}
+                        >
+                          Del
+                        </Button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

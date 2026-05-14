@@ -1,10 +1,13 @@
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 from app.services import ttp_service
+from app.utils.auth import require_roles, ADMIN
 
 bp = Blueprint("ttps", __name__, url_prefix="/api/ttps")
 
 
 @bp.get("/")
+@jwt_required()
 def list_ttps():
     search = request.args.get("search")
     tactic = request.args.get("tactic")
@@ -15,6 +18,7 @@ def list_ttps():
 
 
 @bp.post("/")
+@require_roles(ADMIN)
 def create_ttp():
     data = request.get_json() or {}
     for required in ("mitre_id", "name", "tactic"):
@@ -25,12 +29,14 @@ def create_ttp():
 
 
 @bp.get("/<int:ttp_id>")
+@jwt_required()
 def get_ttp(ttp_id):
     ttp = ttp_service.get_ttp(ttp_id)
     return jsonify(ttp.to_dict())
 
 
 @bp.put("/<int:ttp_id>")
+@require_roles(ADMIN)
 def update_ttp(ttp_id):
     data = request.get_json() or {}
     ttp = ttp_service.update_ttp(ttp_id, data)
@@ -38,6 +44,7 @@ def update_ttp(ttp_id):
 
 
 @bp.delete("/<int:ttp_id>")
+@require_roles(ADMIN)
 def delete_ttp(ttp_id):
     ttp_service.delete_ttp(ttp_id)
     return jsonify({}), 204

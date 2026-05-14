@@ -64,7 +64,17 @@ def create_entry(data):
     return entry
 
 
-def update_entry(entry_id, data):
+_RED_FIELDS  = {"ttp_id", "executed_at", "tool_used", "command_used", "source",
+               "destination", "red_notes", "attack_path_include", "attack_path_step", "tag_ids"}
+_BLUE_FIELDS = {"detected", "detected_at", "detection_method", "alert_name",
+               "response_action", "blue_notes", "outcome", "gap_identified"}
+
+
+def update_entry(entry_id, data, role="admin"):
+    if role == "red_team":
+        data = {k: v for k, v in data.items() if k in _RED_FIELDS}
+    elif role == "blue_team":
+        data = {k: v for k, v in data.items() if k in _BLUE_FIELDS}
     entry = ExerciseEntry.query.get_or_404(entry_id)
     simple_fields = (
         "tool_used", "command_used", "source", "destination", "red_notes",

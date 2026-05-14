@@ -4,5 +4,6 @@ from .ttp import TTP
 from .exercise import Exercise
 from .exercise_entry import ExerciseEntry
 from .entry_image import EntryImage
+from .user import User
 
-__all__ = ["Tag", "Tactic", "TTP", "Exercise", "ExerciseEntry", "EntryImage"]
+__all__ = ["Tag", "Tactic", "TTP", "Exercise", "ExerciseEntry", "EntryImage", "User"]

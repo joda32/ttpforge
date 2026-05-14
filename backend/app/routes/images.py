@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models import EntryImage, ExerciseEntry
+from app.utils.auth import require_roles, ADMIN, RED
 
 bp = Blueprint("images", __name__, url_prefix="/api/images")
 
@@ -8,6 +10,7 @@ MAX_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 @bp.post("/")
+@require_roles(ADMIN, RED)
 def upload():
     entry_id = request.form.get("entry_id", type=int)
     if not entry_id:
@@ -37,6 +40,7 @@ def upload():
 
 
 @bp.get("/")
+@jwt_required()
 def list_images():
     entry_id = request.args.get("entry_id", type=int)
     if not entry_id:
@@ -46,6 +50,7 @@ def list_images():
 
 
 @bp.patch("/<int:image_id>")
+@require_roles(ADMIN, RED)
 def update_image(image_id):
     img = EntryImage.query.get_or_404(image_id)
     body = request.get_json(silent=True) or {}
@@ -56,6 +61,7 @@ def update_image(image_id):
 
 
 @bp.delete("/<int:image_id>")
+@require_roles(ADMIN, RED)
 def delete_image(image_id):
     img = EntryImage.query.get_or_404(image_id)
     db.session.delete(img)

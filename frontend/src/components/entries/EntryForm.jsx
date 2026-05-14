@@ -21,7 +21,7 @@ function toLocalDatetimeValue(isoString) {
   return isoString.slice(0, 16);
 }
 
-export default function EntryForm({ initial = {}, onSubmit, onCancel, loading }) {
+export default function EntryForm({ initial = {}, onSubmit, onCancel, loading, userRole }) {
   const [activeTab, setActiveTab] = useState(0);
   const { data: ttpData } = useTTPs({});
   const ttps = ttpData?.data ?? [];
@@ -76,6 +76,8 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
   };
 
   const ttpOptions = ttps.map((t) => ({ value: t.id, label: `${t.mitre_id} — ${t.name}` }));
+  const redReadOnly  = userRole === "blue_team";
+  const blueReadOnly = userRole === "red_team";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -86,6 +88,7 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
         options={ttpOptions}
         placeholder="Search by MITRE ID or technique name…"
         required
+        disabled={redReadOnly}
       />
 
       {/* Tabs */}
@@ -109,7 +112,7 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
       </div>
 
       {activeTab === 0 && (
-        <div className="flex flex-col gap-3">
+        <fieldset disabled={redReadOnly} className={`flex flex-col gap-3${redReadOnly ? " opacity-60" : ""}`}>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-slate-400 font-medium">Executed At</label>
             <div className="flex items-center gap-2">
@@ -153,11 +156,11 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
               placeholder="Context, variations attempted, etc."
             />
           </div>
-        </div>
+        </fieldset>
       )}
 
       {activeTab === 1 && (
-        <div className="flex flex-col gap-3">
+        <fieldset disabled={blueReadOnly} className={`flex flex-col gap-3${blueReadOnly ? " opacity-60" : ""}`}>
           <Select
             label="Detected?"
             value={String(form.detected)}
@@ -218,7 +221,7 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
               className="bg-slate-700 border border-slate-600 text-slate-100 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500 resize-none"
             />
           </div>
-        </div>
+        </fieldset>
       )}
 
       <TagSelector
@@ -229,6 +232,7 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
       {initial.id && <ImageUploader entryId={initial.id} />}
 
       {/* Attack Path */}
+      <fieldset disabled={redReadOnly} className={redReadOnly ? "opacity-60" : ""}>
       <div className="border border-slate-700 rounded-lg p-3 flex flex-col gap-2">
         <label className="flex items-center gap-2.5 cursor-pointer select-none">
           <input
@@ -254,6 +258,7 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading })
           </div>
         )}
       </div>
+      </fieldset>
 
       <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>

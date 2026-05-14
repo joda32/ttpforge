@@ -1,9 +1,10 @@
-﻿import { useRef, useState } from "react";
+﻿import { useRef, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useExercise, useExerciseSummary, useExerciseEntries } from "../hooks/useExercises";
 import { useCreateEntry, useUpdateEntry, useDeleteEntry } from "../hooks/useEntries";
 import { exportEntriesCSV, importTemplate, importNavigatorLayer } from "../api/entries";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../hooks/useAuth";
 import PageHeader from "../components/layout/PageHeader";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -15,6 +16,49 @@ import EntryTable from "../components/entries/EntryTable";
 import EntryForm from "../components/entries/EntryForm";
 import MitreMatrix from "../components/entries/MitreMatrix";
 import AttackMap from "../components/entries/AttackMap";
+
+function ImportDropdown({ onTemplate, onNavigator, pending }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <Button
+        variant="secondary"
+        onClick={() => setOpen((o) => !o)}
+        disabled={pending}
+      >
+        {pending ? "Importing…" : "Import"}
+        <span className="text-slate-400 text-xs ml-0.5">{open ? "▲" : "▼"}</span>
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 min-w-max overflow-hidden">
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); setOpen(false); onTemplate(); }}
+            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors"
+          >
+            Import Template
+          </button>
+          <div className="h-px bg-slate-700" />
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); setOpen(false); onNavigator(); }}
+            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors"
+          >
+            Import Navigator Layer
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const OUTCOME_OPTIONS = [
   { value: "", label: "All Outcomes" },
@@ -30,6 +74,8 @@ export default function ExerciseDetail() {
   const exerciseId = Number(id);
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const canWrite = user?.role !== "blue_team";
 
   const [activeTab, setActiveTab] = useState(0);
   const [filters, setFilters] = useState({ outcome: "", tactic: "" });
@@ -190,7 +236,7 @@ export default function ExerciseDetail() {
             <Button variant="secondary" onClick={() => exportEntriesCSV(exerciseId, exercise.name)}>
               Download CSV
             </Button>
-            <Button onClick={() => setShowAddEntry(true)}>+ Add Entry</Button>
+            {canWrite && <Button onClick={() => setShowAddEntry(true)}>+ Add Entry</Button>}
           </div>
         }
       />
@@ -256,34 +302,29 @@ export default function ExerciseDetail() {
                   Export {selectedIds.size} Selected
                 </Button>
               )}
-              <Button
-                variant="secondary"
-                onClick={() => importFileRef.current?.click()}
-                disabled={importMutation.isPending}
-              >
-                {importMutation.isPending ? "Importing…" : "Import Template"}
-              </Button>
-              <input
-                ref={importFileRef}
-                type="file"
-                accept=".json,application/json"
-                className="hidden"
-                onChange={handleImportFile}
-              />
-              <Button
-                variant="secondary"
-                onClick={() => navigatorFileRef.current?.click()}
-                disabled={navigatorMutation.isPending}
-              >
-                {navigatorMutation.isPending ? "Importing…" : "Import Navigator Layer"}
-              </Button>
-              <input
-                ref={navigatorFileRef}
-                type="file"
-                accept=".json,application/json"
-                className="hidden"
-                onChange={handleNavigatorFile}
-              />
+              {canWrite && (
+                <>
+                  <ImportDropdown
+                    pending={importMutation.isPending || navigatorMutation.isPending}
+                    onTemplate={() => importFileRef.current?.click()}
+                    onNavigator={() => navigatorFileRef.current?.click()}
+                  />
+                  <input
+                    ref={importFileRef}
+                    type="file"
+                    accept=".json,application/json"
+                    className="hidden"
+                    onChange={handleImportFile}
+                  />
+                  <input
+                    ref={navigatorFileRef}
+                    type="file"
+                    accept=".json,application/json"
+                    className="hidden"
+                    onChange={handleNavigatorFile}
+                  />
+                </>
+              )}
             </div>
           </div>
 
@@ -352,6 +393,7 @@ export default function ExerciseDetail() {
           }
           onCancel={() => setShowAddEntry(false)}
           loading={createMutation.isPending}
+          userRole={user?.role}
         />
       </Modal>
       <Modal isOpen={!!editEntry} onClose={() => setEditEntry(null)} title="Edit TTP Entry" wide>
@@ -365,6 +407,7 @@ export default function ExerciseDetail() {
           }
           onCancel={() => setEditEntry(null)}
           loading={updateMutation.isPending}
+          userRole={user?.role}
         />
       </Modal>
     </div>

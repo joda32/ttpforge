@@ -1,16 +1,20 @@
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 from app.services import exercise_service
+from app.utils.auth import require_roles, ADMIN, RED
 
 bp = Blueprint("exercises", __name__, url_prefix="/api/exercises")
 
 
 @bp.get("/")
+@jwt_required()
 def list_exercises():
     exercises = exercise_service.list_exercises()
     return jsonify({"data": [e.to_dict() for e in exercises], "total": len(exercises)})
 
 
 @bp.post("/")
+@require_roles(ADMIN, RED)
 def create_exercise():
     data = request.get_json() or {}
     if not data.get("name"):
@@ -20,12 +24,14 @@ def create_exercise():
 
 
 @bp.get("/<int:exercise_id>")
+@jwt_required()
 def get_exercise(exercise_id):
     exercise = exercise_service.get_exercise(exercise_id)
     return jsonify(exercise.to_dict())
 
 
 @bp.put("/<int:exercise_id>")
+@require_roles(ADMIN, RED)
 def update_exercise(exercise_id):
     data = request.get_json() or {}
     exercise = exercise_service.update_exercise(exercise_id, data)
@@ -33,18 +39,21 @@ def update_exercise(exercise_id):
 
 
 @bp.delete("/<int:exercise_id>")
+@require_roles(ADMIN)
 def delete_exercise(exercise_id):
     exercise_service.delete_exercise(exercise_id)
     return jsonify({}), 204
 
 
 @bp.get("/<int:exercise_id>/summary")
+@jwt_required()
 def get_summary(exercise_id):
     summary = exercise_service.get_summary(exercise_id)
     return jsonify(summary)
 
 
 @bp.get("/<int:exercise_id>/entries")
+@jwt_required()
 def get_entries(exercise_id):
     from app.services import entry_service
     outcome = request.args.get("outcome")
@@ -54,6 +63,7 @@ def get_entries(exercise_id):
 
 
 @bp.post("/<int:exercise_id>/import-template")
+@require_roles(ADMIN, RED)
 def import_template(exercise_id):
     from app.extensions import db
     from app.models import Exercise, ExerciseEntry
@@ -91,6 +101,7 @@ def import_template(exercise_id):
 
 
 @bp.post("/<int:exercise_id>/import-navigator")
+@require_roles(ADMIN, RED)
 def import_navigator_layer(exercise_id):
     from app.extensions import db
     from app.models import Exercise, ExerciseEntry
@@ -105,7 +116,6 @@ def import_navigator_layer(exercise_id):
     if not isinstance(techniques, list):
         return jsonify({"error": "Invalid Navigator layer: missing 'techniques' array"}), 400
 
-    # Determine starting step for attack path sequencing
     max_step = db.session.query(func.max(ExerciseEntry.attack_path_step)).filter(
         ExerciseEntry.exercise_id == exercise_id,
         ExerciseEntry.attack_path_include == True,
@@ -119,7 +129,6 @@ def import_navigator_layer(exercise_id):
         if not mitre_id:
             continue
 
-        # Exact match first, then fall back to parent technique
         ttp = TTP.query.filter(func.upper(TTP.mitre_id) == mitre_id).first()
         if not ttp and "." in mitre_id:
             parent_id = mitre_id.split(".")[0]
@@ -145,6 +154,7 @@ def import_navigator_layer(exercise_id):
 
 
 @bp.patch("/<int:exercise_id>/attack-path")
+@require_roles(ADMIN, RED)
 def reorder_attack_path(exercise_id):
     from app.services import entry_service
     from app.models import Exercise
@@ -157,6 +167,7 @@ def reorder_attack_path(exercise_id):
 
 
 @bp.delete("/<int:exercise_id>/attack-path/<int:entry_id>")
+@require_roles(ADMIN, RED)
 def remove_from_attack_path(exercise_id, entry_id):
     from app.services import entry_service
     entry = entry_service.remove_from_attack_path(entry_id)

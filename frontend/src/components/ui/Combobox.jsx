@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useEffect } from "react";
 
-export default function Combobox({ value, onChange, options = [], placeholder = "Select…", label, required }) {
+export default function Combobox({ value, onChange, options = [], placeholder = "Select…", label, required, disabled }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
@@ -80,7 +80,8 @@ export default function Combobox({ value, onChange, options = [], placeholder = 
           onKeyDown={handleKeyDown}
           placeholder={open ? "Type to filter…" : placeholder}
           required={required && !value}
-          className={`w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors ${
+          disabled={disabled}
+          className={`w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
             selectedLabel && !open ? "text-slate-100" : "text-slate-400 placeholder-slate-500"
           }`}
         />
