@@ -1,4 +1,6 @@
-# TTPForge
+<p align="center">
+  <img src="ttpforge-logo.svg" alt="TTPForge" width="480" />
+</p>
 
 > [!WARNING]
 > **Early Development — Work in Progress**
