@@ -53,7 +53,7 @@ function ExerciseCard({ ex }) {
 
   return (
     <div
-      onClick={() => navigate(`/exercises/${ex.id}`)}
+      onDoubleClick={() => navigate(`/exercises/${ex.id}`)}
       className={`relative flex flex-col rounded-lg border ${s.border} ${s.bg} cursor-pointer hover:brightness-110 transition-all select-none overflow-hidden`}
     >
       {/* Coloured accent bar */}
