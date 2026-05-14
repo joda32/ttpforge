@@ -5,6 +5,7 @@
 #   ./start.sh            # Start the application
 #   ./start.sh --check    # Verify requirements
 #   ./start.sh --init     # First-time setup
+#   ./start.sh --build    # Rebuild images and restart
 #   ./start.sh --stop     # Stop containers
 
 set -euo pipefail
@@ -183,6 +184,25 @@ do_init() {
     echo ""
 }
 
+# ── --build ───────────────────────────────────────────────────────────────────
+
+do_build() {
+    head "=== Rebuilding TTPForge images ==="
+
+    if [[ ! -f "docker-compose.yml" ]]; then
+        fail "docker-compose.yml not found. Run this script from the project root."
+        exit 1
+    fi
+
+    run_compose up --build -d
+
+    echo ""
+    printf "  \e[36mApp:      http://localhost:5173\e[0m\n"
+    printf "  \e[36mAPI docs: http://localhost:5000/docs/api\e[0m\n"
+    echo ""
+    info "View logs with: docker compose logs -f"
+}
+
 # ── --stop ────────────────────────────────────────────────────────────────────
 
 do_stop() {
@@ -215,11 +235,12 @@ do_start() {
 case "${1:-}" in
     --check) do_check ;;
     --init)  do_init  ;;
+    --build) do_build ;;
     --stop)  do_stop  ;;
     "")      do_start ;;
     *)
         printf "Unknown option: %s\n" "$1"
-        printf "Usage: %s [--check | --init | --stop]\n" "$0"
+        printf "Usage: %s [--check | --init | --build | --stop]\n" "$0"
         exit 1
         ;;
 esac

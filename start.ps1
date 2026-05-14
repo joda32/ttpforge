@@ -12,6 +12,9 @@
 .PARAMETER Init
     First-time setup: build images, run DB migrations, seed default users.
 
+.PARAMETER Build
+    Rebuild Docker images and restart containers.
+
 .PARAMETER Stop
     Stop all running containers.
 
@@ -19,11 +22,13 @@
     .\start.ps1              # Start the application
     .\start.ps1 -Check       # Verify requirements
     .\start.ps1 -Init        # First-time setup
+    .\start.ps1 -Build       # Rebuild images and restart
     .\start.ps1 -Stop        # Stop containers
 #>
 param(
     [switch]$Check,
     [switch]$Init,
+    [switch]$Build,
     [switch]$Stop
 )
 
@@ -204,6 +209,32 @@ function Invoke-Init {
     Write-Host ""
 }
 
+# ── --build ───────────────────────────────────────────────────────────────────
+
+function Invoke-Build {
+    Write-Head "=== Rebuilding TTPForge images ==="
+
+    if (-not (Test-Path "docker-compose.yml")) {
+        Write-Fail "docker-compose.yml not found. Run this script from the project root."
+        exit 1
+    }
+
+    $cmd = Get-ComposeCommand
+    if (-not $cmd) { throw "Docker Compose not found." }
+    if ($cmd -eq "docker compose") {
+        & docker compose up --build -d
+    } else {
+        & docker-compose up --build -d
+    }
+    if ($LASTEXITCODE -ne 0) { exit 1 }
+
+    Write-Host ""
+    Write-Host "  App:      http://localhost:5173" -ForegroundColor Cyan
+    Write-Host "  API docs: http://localhost:5000/docs/api" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Info "View logs with: docker compose logs -f"
+}
+
 # ── --stop ────────────────────────────────────────────────────────────────────
 
 function Invoke-Stop {
@@ -229,7 +260,6 @@ function Invoke-Start {
         exit 1
     }
 
-    #Invoke-Compose " up -d"
     $cmd = Get-ComposeCommand
     if (-not $cmd) { throw "Docker Compose not found." }
     if ($cmd -eq "docker compose") {
@@ -249,7 +279,9 @@ function Invoke-Start {
 # ── dispatch ──────────────────────────────────────────────────────────────────
 
 if ($Check) { $null = Invoke-Check }
-elseif ($Init) { Invoke-Init }
-elseif ($Stop) { Invoke-Stop }
+elseif ($Init)  { Invoke-Init  }
+elseif ($Build) { Invoke-Build }
+elseif ($Stop)  { Invoke-Stop  }
 else { Invoke-Start }
+
 
