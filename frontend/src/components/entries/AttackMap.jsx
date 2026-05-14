@@ -72,7 +72,6 @@ function buildAttackMapSVG(pathEntries, exerciseName) {
     + SCOPE_H + EXP_PAD;
 
   let out = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">`;
-  out += `<rect width="${totalW}" height="${totalH}" fill="#0f172a"/>`;
 
   // Title
   if (exerciseName) {

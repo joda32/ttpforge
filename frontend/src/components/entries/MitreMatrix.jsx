@@ -52,7 +52,6 @@ function buildMatrixSVG(tactics, tacticMap, exerciseName) {
   const totalH   = PAD + TITLE_H + HDR_H + CELL_GAP + maxCells * (CELL_H + CELL_GAP) + LEGEND_H + PAD;
 
   let out = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">`;
-  out += `<rect width="${totalW}" height="${totalH}" fill="#0f172a"/>`;
 
   // Optional title
   if (exerciseName) {
