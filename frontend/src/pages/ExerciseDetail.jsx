@@ -377,7 +377,7 @@ export default function ExerciseDetail() {
       )}
 
       {/* Tab: ATT&CK Matrix */}
-      {activeTab === 1 && <MitreMatrix entries={allEntries} />}
+      {activeTab === 1 && <MitreMatrix entries={allEntries} exerciseName={exercise?.name} />}
 
       {/* Tab: Attack Map */}
       {activeTab === 2 && <AttackMap entries={allEntries} exerciseId={exerciseId} />}
