@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     TTPForge startup script for Windows.
@@ -172,7 +172,7 @@ function Invoke-Init {
                        -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
             if ($resp.StatusCode -eq 200) { $ready = $true; break }
         } catch {}
-        Write-Host "  Waiting... ($elapsed/$timeout s)" -ForegroundColor DarkGray
+        Write-Host ("  Waiting... ({0}/{1} s)" -f $elapsed, $timeout) -ForegroundColor DarkGray
         Start-Sleep -Seconds $interval
         $elapsed += $interval
     }
@@ -248,3 +248,4 @@ if ($Check) { $null = Invoke-Check }
 elseif ($Init) { Invoke-Init }
 elseif ($Stop) { Invoke-Stop }
 else { Invoke-Start }
+
