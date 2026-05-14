@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useExercises, useCreateExercise, useUpdateExercise, useDeleteExercise } from "../hooks/useExercises";
 import { useAuth } from "../hooks/useAuth";
@@ -16,6 +16,109 @@ const STATUS_ACTIONS = {
               { label: "Stop",  next: "completed", cls: "text-red-400 hover:text-red-300" }],
   completed: [],
 };
+
+const CARD_STYLE = {
+  planned: {
+    border:  "border-slate-600",
+    bg:      "bg-slate-800",
+    accent:  "bg-slate-500",
+    name:    "text-slate-100",
+    desc:    "text-slate-400",
+    date:    "text-slate-500",
+    label:   "text-slate-400",
+  },
+  active: {
+    border:  "border-yellow-700",
+    bg:      "bg-yellow-950/50",
+    accent:  "bg-yellow-500",
+    name:    "text-yellow-50",
+    desc:    "text-yellow-200/60",
+    date:    "text-yellow-300/50",
+    label:   "text-yellow-300/70",
+  },
+  completed: {
+    border:  "border-green-700",
+    bg:      "bg-green-950/50",
+    accent:  "bg-green-600",
+    name:    "text-green-50",
+    desc:    "text-green-200/60",
+    date:    "text-green-300/50",
+    label:   "text-green-300/70",
+  },
+};
+
+function ExerciseCard({ ex, onStatusChange, onEdit, onDelete, canWrite, isAdmin }) {
+  const navigate = useNavigate();
+  const s = CARD_STYLE[ex.status] ?? CARD_STYLE.planned;
+  const actions = canWrite ? (STATUS_ACTIONS[ex.status] ?? []) : [];
+
+  return (
+    <div
+      onClick={() => navigate(`/exercises/${ex.id}`)}
+      className={`relative flex flex-col rounded-lg border ${s.border} ${s.bg} cursor-pointer hover:brightness-110 transition-all select-none overflow-hidden`}
+    >
+      {/* Coloured top accent bar */}
+      <div className={`h-1 w-full ${s.accent}`} />
+
+      <div className="flex flex-col gap-2 p-4 flex-1">
+        {/* Status + action buttons */}
+        <div className="flex items-center justify-between gap-2">
+          <Badge variant={ex.status} />
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            {actions.map(({ label, next, cls }) => (
+              <button
+                key={label}
+                onClick={(e) => onStatusChange(ex.id, next, e)}
+                className={`text-xs font-medium px-2 py-0.5 rounded border border-slate-600 bg-slate-700/60 hover:bg-slate-600 transition-colors ${cls}`}
+              >
+                {label}
+              </button>
+            ))}
+            {canWrite && (
+              <button
+                onClick={(e) => onEdit(ex, e)}
+                className="text-xs px-2 py-0.5 rounded border border-slate-600 bg-slate-700/60 text-slate-400 hover:text-slate-200 hover:bg-slate-600 transition-colors"
+              >
+                Edit
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={(e) => onDelete(ex.id, e)}
+                className="text-xs px-2 py-0.5 rounded border border-red-800/60 bg-slate-700/60 text-red-400 hover:text-red-300 hover:bg-red-900/40 transition-colors"
+              >
+                Del
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Name */}
+        <div className={`font-semibold text-base leading-snug ${s.name}`}>{ex.name}</div>
+
+        {/* Description */}
+        {ex.description ? (
+          <p className={`text-xs line-clamp-2 leading-relaxed flex-1 ${s.desc}`}>{ex.description}</p>
+        ) : (
+          <p className={`text-xs flex-1 ${s.date}`}>No description</p>
+        )}
+
+        {/* Tags */}
+        {ex.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {ex.tags.map((t) => <TagBadge key={t.id} tag={t} />)}
+          </div>
+        )}
+
+        {/* Dates */}
+        <div className={`flex gap-4 text-xs mt-auto pt-2 border-t border-white/5 ${s.date}`}>
+          <span><span className={`font-medium ${s.label}`}>Start </span>{ex.start_date ?? "—"}</span>
+          <span><span className={`font-medium ${s.label}`}>End </span>{ex.end_date ?? "—"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Exercises() {
   const navigate = useNavigate();
@@ -44,6 +147,15 @@ export default function Exercises() {
     if (window.confirm("Delete this exercise and all its entries?")) deleteMutation.mutate(id);
   };
 
+  // Newest first
+  const sorted = [...exercises].sort(
+    (a, b) => new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0)
+  );
+  const cardExs  = sorted.slice(0, 4);
+  const tableExs = sorted.slice(4);
+
+  const cardProps = { onStatusChange: handleStatusChange, onEdit: handleEdit, onDelete: handleDelete, canWrite, isAdmin };
+
   return (
     <div>
       <PageHeader
@@ -61,7 +173,17 @@ export default function Exercises() {
         </div>
       )}
 
-      {!isLoading && exercises.length > 0 && (
+      {/* Card strip — newest 4 */}
+      {!isLoading && cardExs.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {cardExs.map((ex) => (
+            <ExerciseCard key={ex.id} ex={ex} {...cardProps} />
+          ))}
+        </div>
+      )}
+
+      {/* Overflow table — exercises 5+ */}
+      {!isLoading && tableExs.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-slate-700">
           <table className="w-full text-sm">
             <thead className="bg-slate-800 border-b border-slate-700">
@@ -75,7 +197,7 @@ export default function Exercises() {
               </tr>
             </thead>
             <tbody>
-              {exercises.map((ex) => (
+              {tableExs.map((ex) => (
                 <tr
                   key={ex.id}
                   className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors cursor-pointer select-none"
@@ -124,11 +246,20 @@ export default function Exercises() {
       )}
 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="New Exercise">
-        <ExerciseForm onSubmit={(d) => createMutation.mutate(d, { onSuccess: () => setShowCreate(false) })} onCancel={() => setShowCreate(false)} loading={createMutation.isPending} />
+        <ExerciseForm
+          onSubmit={(d) => createMutation.mutate(d, { onSuccess: () => setShowCreate(false) })}
+          onCancel={() => setShowCreate(false)}
+          loading={createMutation.isPending}
+        />
       </Modal>
 
       <Modal isOpen={!!editTarget} onClose={() => setEditTarget(null)} title="Edit Exercise">
-        <ExerciseForm initial={editTarget ?? {}} onSubmit={(d) => updateMutation.mutate(d, { onSuccess: () => setEditTarget(null) })} onCancel={() => setEditTarget(null)} loading={updateMutation.isPending} />
+        <ExerciseForm
+          initial={editTarget ?? {}}
+          onSubmit={(d) => updateMutation.mutate(d, { onSuccess: () => setEditTarget(null) })}
+          onCancel={() => setEditTarget(null)}
+          loading={updateMutation.isPending}
+        />
       </Modal>
     </div>
   );
