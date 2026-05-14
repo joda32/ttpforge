@@ -1,13 +1,13 @@
 <svg width="680" height="420" viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg" style="background:transparent">
   <title>TTPForge logo - light version</title>
-  <desc>TTPForge PCB logo in black for use on light backgrounds</desc>
+  <desc>TTPForge PCB logo in white for use on dark backgrounds</desc>
 
   <style>
-    .logo-text { font-family: 'Courier New', monospace; fill: #000000; letter-spacing: 0.14em; }
-    .logo-sub  { font-family: 'Courier New', monospace; fill: #444444; letter-spacing: 0.38em; }
-    .tk  { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-width: 9; }
-    .tks { fill: none; stroke: #000000; stroke-linecap: round; stroke-linejoin: round; stroke-width: 5; }
-    .pad { fill: #000000; }
+    .logo-text { font-family: 'Courier New', monospace; fill: #ffffff; letter-spacing: 0.14em; }
+    .logo-sub  { font-family: 'Courier New', monospace; fill: #aaaaaa; letter-spacing: 0.38em; }
+    .tk  { fill: none; stroke: #ffffff; stroke-linecap: round; stroke-linejoin: round; stroke-width: 9; }
+    .tks { fill: none; stroke: #ffffff; stroke-linecap: round; stroke-linejoin: round; stroke-width: 5; }
+    .pad { fill: #ffffff; }
     .hole { fill: #ffffff; }
   </style>
 
@@ -47,8 +47,8 @@
     <rect x="-40" y="100" width="80" height="80" rx="3" class="pad"/>
     <rect x="-33" y="107" width="66" height="66" rx="2" fill="#ffffff" stroke="none"/>
     <circle cx="-27" cy="113" r="4" class="pad"/>
-    <line x1="-18" y1="140" x2="18" y2="140" stroke="#000000" stroke-width="3"/>
-    <line x1="-10" y1="150" x2="10" y2="150" stroke="#000000" stroke-width="3"/>
+    <line x1="-18" y1="140" x2="18" y2="140" stroke="#ffffff" stroke-width="3"/>
+    <line x1="-10" y1="150" x2="10" y2="150" stroke="#ffffff" stroke-width="3"/>
     <rect x="-26" y="90"  width="10" height="12" rx="1" class="pad"/>
     <rect x="-8"  y="90"  width="10" height="12" rx="1" class="pad"/>
     <rect x="10"  y="90"  width="10" height="12" rx="1" class="pad"/>
@@ -66,16 +66,16 @@
     <rect x="40"  y="144" width="12" height="10" rx="1" class="pad"/>
     <rect x="40"  y="160" width="12" height="10" rx="1" class="pad"/>
 
-    <circle cx="-105" cy="70" r="14" class="pad"/><circle cx="-105" cy="70" r="6" class="hole"/>
-    <circle cx="-35"  cy="70" r="14" class="pad"/><circle cx="-35"  cy="70" r="6" class="hole"/>
-    <circle cx="35"   cy="70" r="14" class="pad"/><circle cx="35"   cy="70" r="6" class="hole"/>
-    <circle cx="105"  cy="70" r="14" class="pad"/><circle cx="105"  cy="70" r="6" class="hole"/>
-    <circle cx="-105" cy="140" r="14" class="pad"/><circle cx="-105" cy="140" r="6" class="hole"/>
-    <circle cx="105"  cy="140" r="14" class="pad"/><circle cx="105"  cy="140" r="6" class="hole"/>
-    <circle cx="-105" cy="210" r="14" class="pad"/><circle cx="-105" cy="210" r="6" class="hole"/>
-    <circle cx="-35"  cy="210" r="14" class="pad"/><circle cx="-35"  cy="210" r="6" class="hole"/>
-    <circle cx="35"   cy="210" r="14" class="pad"/><circle cx="35"   cy="210" r="6" class="hole"/>
-    <circle cx="105"  cy="210" r="14" class="pad"/><circle cx="105"  cy="210" r="6" class="hole"/>
+    <circle cx="-105" cy="70" r="14" class="pad"/><circle cx="-105" cy="70" r="6" style="fill:#000000"/>
+    <circle cx="-35"  cy="70" r="14" class="pad"/><circle cx="-35"  cy="70" r="6" style="fill:#000000"/>
+    <circle cx="35"   cy="70" r="14" class="pad"/><circle cx="35"   cy="70" r="6" style="fill:#000000"/>
+    <circle cx="105"  cy="70" r="14" class="pad"/><circle cx="105"  cy="70" r="6" style="fill:#000000"/>
+    <circle cx="-105" cy="140" r="14" class="pad"/><circle cx="-105" cy="140" r="6" style="fill:#000000"/>
+    <circle cx="105"  cy="140" r="14" class="pad"/><circle cx="105"  cy="140" r="6" style="fill:#000000"/>
+    <circle cx="-105" cy="210" r="14" class="pad"/><circle cx="-105" cy="210" r="6" style="fill:#000000"/>
+    <circle cx="-35"  cy="210" r="14" class="pad"/><circle cx="-35"  cy="210" r="6" style="fill:#000000"/>
+    <circle cx="35"   cy="210" r="14" class="pad"/><circle cx="35"   cy="210" r="6" style="fill:#000000"/>
+    <circle cx="105"  cy="210" r="14" class="pad"/><circle cx="105"  cy="210" r="6" style="fill:#000000"/>
 
     <circle cx="-70" cy="35"  r="8" class="pad"/>
     <circle cx="70"  cy="35"  r="8" class="pad"/>
