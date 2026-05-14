@@ -6,6 +6,7 @@ import Combobox from "../ui/Combobox";
 import Button from "../ui/Button";
 import TagSelector from "../ui/TagSelector";
 import ImageUploader from "./ImageUploader";
+import EntryChangelog from "./EntryChangelog";
 
 const OUTCOME_OPTIONS = [
   { value: "", label: "— Not set —" },
@@ -14,7 +15,7 @@ const OUTCOME_OPTIONS = [
   { value: "partial", label: "Partial" },
 ];
 
-const TABS = ["Red Team", "Blue Team"];
+const FORM_TABS = ["Red Team", "Blue Team"];
 
 function toLocalDatetimeValue(isoString) {
   if (!isoString) return "";
@@ -23,6 +24,8 @@ function toLocalDatetimeValue(isoString) {
 
 export default function EntryForm({ initial = {}, onSubmit, onCancel, loading, userRole }) {
   const [activeTab, setActiveTab] = useState(0);
+  const isEdit = !!initial.id;
+  const tabs = isEdit ? [...FORM_TABS, "Change Log"] : FORM_TABS;
   const { data: ttpData } = useTTPs({});
   const ttps = ttpData?.data ?? [];
 
@@ -93,7 +96,7 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading, u
 
       {/* Tabs */}
       <div className="flex border-b border-slate-700">
-        {TABS.map((tab, i) => (
+        {tabs.map((tab, i) => (
           <button
             key={tab}
             type="button"
@@ -102,7 +105,9 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading, u
               activeTab === i
                 ? i === 0
                   ? "border-red-500 text-red-400"
-                  : "border-blue-500 text-blue-400"
+                  : i === 1
+                  ? "border-blue-500 text-blue-400"
+                  : "border-slate-400 text-slate-300"
                 : "border-transparent text-slate-500 hover:text-slate-300"
             }`}
           >
@@ -224,47 +229,60 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading, u
         </fieldset>
       )}
 
-      <TagSelector
-        value={form.tag_ids}
-        onChange={(ids) => setForm((f) => ({ ...f, tag_ids: ids }))}
-      />
-
-      {initial.id && <ImageUploader entryId={initial.id} />}
-
-      {/* Attack Path */}
-      <fieldset disabled={redReadOnly} className={redReadOnly ? "opacity-60" : ""}>
-      <div className="border border-slate-700 rounded-lg p-3 flex flex-col gap-2">
-        <label className="flex items-center gap-2.5 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={form.attack_path_include}
-            onChange={(e) => setForm((f) => ({ ...f, attack_path_include: e.target.checked, attack_path_step: e.target.checked ? f.attack_path_step : "" }))}
-            className="w-4 h-4 rounded border-slate-500 accent-blue-500"
+      {activeTab !== 2 && (
+        <>
+          <TagSelector
+            value={form.tag_ids}
+            onChange={(ids) => setForm((f) => ({ ...f, tag_ids: ids }))}
           />
-          <span className="text-sm text-slate-300 font-medium">Include in Attack Path</span>
-        </label>
-        {form.attack_path_include && (
-          <div className="flex items-center gap-2 ml-6">
-            <label className="text-xs text-slate-400 shrink-0">Step #</label>
-            <input
-              type="number"
-              min="1"
-              value={form.attack_path_step}
-              onChange={(e) => setForm((f) => ({ ...f, attack_path_step: e.target.value }))}
-              placeholder="Auto"
-              className="w-20 bg-slate-700 border border-slate-600 text-slate-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500"
-            />
-            <span className="text-xs text-slate-500">Leave blank to assign next step automatically</span>
-          </div>
-        )}
-      </div>
-      </fieldset>
+
+          {initial.id && <ImageUploader entryId={initial.id} />}
+
+          {/* Attack Path */}
+          <fieldset disabled={redReadOnly} className={redReadOnly ? "opacity-60" : ""}>
+            <div className="border border-slate-700 rounded-lg p-3 flex flex-col gap-2">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.attack_path_include}
+                  onChange={(e) => setForm((f) => ({ ...f, attack_path_include: e.target.checked, attack_path_step: e.target.checked ? f.attack_path_step : "" }))}
+                  className="w-4 h-4 rounded border-slate-500 accent-blue-500"
+                />
+                <span className="text-sm text-slate-300 font-medium">Include in Attack Path</span>
+              </label>
+              {form.attack_path_include && (
+                <div className="flex items-center gap-2 ml-6">
+                  <label className="text-xs text-slate-400 shrink-0">Step #</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.attack_path_step}
+                    onChange={(e) => setForm((f) => ({ ...f, attack_path_step: e.target.value }))}
+                    placeholder="Auto"
+                    className="w-20 bg-slate-700 border border-slate-600 text-slate-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500"
+                  />
+                  <span className="text-xs text-slate-500">Leave blank to assign next step automatically</span>
+                </div>
+              )}
+            </div>
+          </fieldset>
+        </>
+      )}
+
+      {/* Change Log tab */}
+      {activeTab === 2 && isEdit && (
+        <EntryChangelog entryId={initial.id} />
+      )}
 
       <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
-        <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" disabled={loading || !form.ttp_id}>
-          {loading ? "Saving…" : "Save Entry"}
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          {activeTab === 2 ? "Close" : "Cancel"}
         </Button>
+        {activeTab !== 2 && (
+          <Button type="submit" disabled={loading || !form.ttp_id}>
+            {loading ? "Saving…" : "Save Entry"}
+          </Button>
+        )}
       </div>
     </form>
   );

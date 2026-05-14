@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models import EntryImage, ExerciseEntry
-from app.utils.auth import require_roles, ADMIN, RED
+from app.utils.auth import require_roles, current_user, ADMIN, RED
+from app.services import entry_service
 
 bp = Blueprint("images", __name__, url_prefix="/api/images")
 
@@ -28,6 +29,7 @@ def upload():
     if len(data) > MAX_SIZE:
         return jsonify({"error": "File exceeds 10 MB limit"}), 413
 
+    user = current_user()
     img = EntryImage(
         entry_id=entry_id,
         filename=file.filename or "image.png",
@@ -36,6 +38,7 @@ def upload():
     )
     db.session.add(img)
     db.session.commit()
+    entry_service.log_screenshot(entry_id, img.filename, user_id=user.id if user else None)
     return jsonify(img.to_dict()), 201
 
 

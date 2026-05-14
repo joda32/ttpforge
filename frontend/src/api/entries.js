@@ -1,6 +1,7 @@
 import client from "./client";
 
 export const createEntry = (data) => client.post("/api/entries/", data).then((r) => r.data);
+export const getEntryChangelog = (entryId) => client.get(`/api/entries/${entryId}/changelog`).then((r) => r.data);
 export const importTemplate = (exerciseId, entries) =>
   client.post(`/api/exercises/${exerciseId}/import-template`, { entries }).then((r) => r.data);
 export const updateEntry = (id, data) => client.put(`/api/entries/${id}`, data).then((r) => r.data);

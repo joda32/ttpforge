@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from app.extensions import db
 from app.models.exercise_entry import ExerciseEntry
+from app.models.entry_changelog import EntryChangeLog
 from app.models.ttp import TTP
 from app.services.tag_service import set_tags
 
@@ -31,7 +32,35 @@ def _next_attack_step(exercise_id):
     return (max_step or 0) + 1
 
 
-def create_entry(data):
+def _val_str(value):
+    """Normalise a field value to a string suitable for change-log storage."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return str(value)
+
+
+_RED_FIELDS  = {"ttp_id", "executed_at", "tool_used", "command_used", "source",
+               "destination", "red_notes", "attack_path_include", "attack_path_step", "tag_ids"}
+_BLUE_FIELDS = {"detected", "detected_at", "detection_method", "alert_name",
+               "response_action", "blue_notes", "outcome", "gap_identified"}
+
+# Fields we always watch for change-log purposes
+_TRACKED_FIELDS = [
+    "command_used",
+    "red_notes",
+    "detected",
+    "outcome",
+    "detected_at",
+    "blue_notes",
+    "alert_name",
+]
+
+
+def create_entry(data, user_id=None):
     include = bool(data.get("attack_path_include", True))
     step = None
     if include:
@@ -60,22 +89,33 @@ def create_entry(data):
     db.session.add(entry)
     db.session.flush()
     set_tags(entry, data.get("tag_ids"))
+
+    # Log initial red team fields when present on first save
+    for field in ("command_used", "red_notes"):
+        val = data.get(field)
+        if val:
+            db.session.add(EntryChangeLog(
+                entry_id=entry.id,
+                user_id=user_id,
+                field_name=field,
+                old_value=None,
+                new_value=str(val),
+            ))
+
     db.session.commit()
     return entry
 
 
-_RED_FIELDS  = {"ttp_id", "executed_at", "tool_used", "command_used", "source",
-               "destination", "red_notes", "attack_path_include", "attack_path_step", "tag_ids"}
-_BLUE_FIELDS = {"detected", "detected_at", "detection_method", "alert_name",
-               "response_action", "blue_notes", "outcome", "gap_identified"}
-
-
-def update_entry(entry_id, data, role="admin"):
+def update_entry(entry_id, data, role="admin", user_id=None):
     if role == "red_team":
         data = {k: v for k, v in data.items() if k in _RED_FIELDS}
     elif role == "blue_team":
         data = {k: v for k, v in data.items() if k in _BLUE_FIELDS}
     entry = ExerciseEntry.query.get_or_404(entry_id)
+
+    # Snapshot current values of tracked fields before mutation
+    old_snap = {f: _val_str(getattr(entry, f, None)) for f in _TRACKED_FIELDS}
+
     simple_fields = (
         "tool_used", "command_used", "source", "destination", "red_notes",
         "detected", "detection_method", "alert_name",
@@ -101,8 +141,42 @@ def update_entry(entry_id, data, role="admin"):
     elif "attack_path_step" in data and entry.attack_path_include:
         entry.attack_path_step = int(data["attack_path_step"]) if data["attack_path_step"] else None
     set_tags(entry, data.get("tag_ids"))
+
+    # Record changes for tracked fields
+    for field in _TRACKED_FIELDS:
+        new_str = _val_str(getattr(entry, field, None))
+        if old_snap[field] != new_str:
+            db.session.add(EntryChangeLog(
+                entry_id=entry.id,
+                user_id=user_id,
+                field_name=field,
+                old_value=old_snap[field],
+                new_value=new_str,
+            ))
+
     db.session.commit()
     return entry
+
+
+def log_screenshot(entry_id, filename, user_id=None):
+    """Called by the images route when a screenshot is attached to an entry."""
+    db.session.add(EntryChangeLog(
+        entry_id=entry_id,
+        user_id=user_id,
+        field_name="screenshot",
+        old_value=None,
+        new_value=filename,
+    ))
+    db.session.commit()
+
+
+def list_changelog(entry_id):
+    return (
+        EntryChangeLog.query
+        .filter_by(entry_id=entry_id)
+        .order_by(EntryChangeLog.changed_at.desc())
+        .all()
+    )
 
 
 def reorder_attack_path(exercise_id, steps):

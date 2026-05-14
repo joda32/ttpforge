@@ -13,7 +13,8 @@ def create_entry():
     for required in ("exercise_id", "ttp_id"):
         if not data.get(required):
             return jsonify({"error": f"{required} is required"}), 400
-    entry = entry_service.create_entry(data)
+    user = current_user()
+    entry = entry_service.create_entry(data, user_id=user.id if user else None)
     return jsonify(entry.to_dict()), 201
 
 
@@ -31,8 +32,15 @@ def update_entry(entry_id):
     user = current_user()
     if not user or not user.is_approved or not user.is_active:
         return jsonify({"error": "Unauthorized"}), 403
-    entry = entry_service.update_entry(entry_id, data, role=user.role)
+    entry = entry_service.update_entry(entry_id, data, role=user.role, user_id=user.id)
     return jsonify(entry.to_dict())
+
+
+@bp.get("/<int:entry_id>/changelog")
+@jwt_required()
+def get_changelog(entry_id):
+    logs = entry_service.list_changelog(entry_id)
+    return jsonify([log.to_dict() for log in logs])
 
 
 @bp.delete("/<int:entry_id>")
