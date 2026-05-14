@@ -56,16 +56,6 @@ function Get-ComposeCommand {
     return $null
 }
 
-function Invoke-Compose([string]$args) {
-    $cmd = Get-ComposeCommand
-    if (-not $cmd) { throw "Docker Compose not found." }
-    if ($cmd -eq "docker compose") {
-        & docker compose $args.Split(" ")
-    } else {
-        & docker-compose $args.Split(" ")
-    }
-}
-
 # ── --check ───────────────────────────────────────────────────────────────────
 
 function Invoke-Check {
@@ -218,7 +208,14 @@ function Invoke-Init {
 
 function Invoke-Stop {
     Write-Head "=== Stopping TTPForge ==="
-    Invoke-Compose "down"
+    $cmd = Get-ComposeCommand
+    if (-not $cmd) { throw "Docker Compose not found." }
+    if ($cmd -eq "docker compose") {
+        & docker compose down
+    } else {
+        & docker-compose down
+    }
+    if ($LASTEXITCODE -ne 0) { exit 1 }
     Write-Ok "All containers stopped."
 }
 
@@ -232,7 +229,14 @@ function Invoke-Start {
         exit 1
     }
 
-    Invoke-Compose "up -d"
+    #Invoke-Compose " up -d"
+    $cmd = Get-ComposeCommand
+    if (-not $cmd) { throw "Docker Compose not found." }
+    if ($cmd -eq "docker compose") {
+        & docker compose up -d
+    } else {
+        & docker-compose up -d
+    }
     if ($LASTEXITCODE -ne 0) { exit 1 }
 
     Write-Host ""
