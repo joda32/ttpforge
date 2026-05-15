@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useImages, useUploadImage, useUpdateImageCaption, useDeleteImage } from "../../hooks/useImages";
 
 const THUMB = "w-20 h-20";
@@ -33,6 +33,25 @@ export default function ImageUploader({ entryId }) {
   const [dragging, setDragging] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const fileInputRef = useRef(null);
+
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") {
+        const idx = images.findIndex((i) => i.id === lightbox.id);
+        if (idx < images.length - 1) setLightbox(images[idx + 1]);
+      }
+      if (e.key === "ArrowLeft") {
+        const idx = images.findIndex((i) => i.id === lightbox.id);
+        if (idx > 0) setLightbox(images[idx - 1]);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox, images, closeLightbox]);
 
   const handleFiles = (files) => {
     Array.from(files).forEach((f) => {
@@ -141,6 +160,42 @@ export default function ImageUploader({ entryId }) {
           </div>
         ))}
       </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={closeLightbox}
+        >
+          <div
+            className="relative max-w-5xl max-h-[90vh] flex flex-col items-center gap-3 p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={lightbox.data_url}
+              alt={lightbox.caption || lightbox.filename}
+              className="max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain"
+            />
+            {lightbox.caption && (
+              <p className="text-slate-300 text-sm">{lightbox.caption}</p>
+            )}
+            <button
+              type="button"
+              onClick={closeLightbox}
+              className="absolute -top-1 -right-1 w-8 h-8 flex items-center justify-center rounded-full bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white text-lg transition-colors"
+              title="Close (Esc)"
+            >
+              ×
+            </button>
+            {images.length > 1 && (
+              <div className="flex items-center gap-2 text-slate-500 text-xs">
+                {images.findIndex((i) => i.id === lightbox.id) + 1} / {images.length}
+                <span className="text-slate-600">· arrow keys to navigate</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
