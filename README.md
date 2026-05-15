@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ttpforge-logo.svg" alt="TTPForge" width="480" />
+  <img src="assets/ttpforge-logo.svg" alt="TTPForge" width="480" />
 </p>
 
 > [!WARNING]
@@ -10,6 +10,26 @@
 > Bug reports, pull requests, and feature suggestions are very welcome and greatly appreciated — please open an issue or PR if you run into something or have an idea worth adding.
 
 TTP Tracker is a web-based purple team exercise management tool built to help red and blue teams collaborate more effectively during adversary simulation engagements. Instead of tracking techniques and detection outcomes across spreadsheets and shared docs, everything lives in one place — from the initial red team execution notes through to the blue team's detection results and gap analysis. It's designed to give both sides visibility into the same exercise in real time, with each role only able to touch the fields that belong to them.
+
+---
+
+## Screenshots
+
+#### TTP List Screen
+<p align="center">
+  <img src="assets/TTP-List-Screen-01.png" alt="TTP List" />
+</p>
+
+#### ATT&CK Matrix Screen
+<p align="center">
+  <img src="assets/ATT&CK-Matrix-01.png" alt="ATT&CK Matrix" />
+</p>
+
+#### Attack Map Screen
+<p align="center">
+  <img src="assets/Attack-Map-01.png" alt="Attack Map" />
+</p>
+
 
 ---
 
@@ -25,8 +45,6 @@ TTP Tracker is a web-based purple team exercise management tool built to help re
 - **Image attachments** — attach screenshots to entries (e.g. SIEM alerts, tool output) with thumbnail previews inline
 - **TTP library** — searchable library of MITRE ATT&CK techniques, with support for importing the full dataset from MITRE
 - **Tags** — tag exercises and entries for filtering and reporting
-- **Reports page** — per-exercise summary with detection rate statistics
-- **User management** — admin-controlled user approval and role assignment; self-service signup with pending approval flow
 - **API documentation** — built-in Swagger UI at `/docs/api`
 
 ---
