@@ -65,6 +65,7 @@ SPEC = {
                     "id":              {"type": "integer", "example": 1},
                     "mitre_id":        {"type": "string",  "example": "TA0001"},
                     "name":            {"type": "string",  "example": "Initial Access"},
+                    "framework":       {"type": "string",  "enum": ["enterprise", "ics", "mobile"], "example": "enterprise"},
                     "technique_count": {"type": "integer", "example": 9},
                 },
             },
@@ -77,6 +78,7 @@ SPEC = {
                     "tactic":      {"type": "string",  "example": "Execution"},
                     "description": {"type": "string",  "nullable": True},
                     "platform":    {"type": "string",  "nullable": True, "example": "Windows,Linux"},
+                    "framework":   {"type": "string",  "enum": ["enterprise", "ics", "mobile"], "example": "enterprise"},
                     "tactics":     {"type": "array", "items": {"$ref": "#/components/schemas/Tactic"}},
                     "created_at":  {"type": "string",  "format": "date-time"},
                 },
@@ -253,6 +255,52 @@ SPEC = {
                     "password":    {"type": "string", "description": "Provide to reset the user's password"},
                 },
             },
+            "LLMConfig": {
+                "type": "object",
+                "properties": {
+                    "id":          {"type": "integer", "example": 1},
+                    "provider":    {"type": "string",  "enum": ["anthropic", "openai", "ollama"], "example": "anthropic"},
+                    "model":       {"type": "string",  "example": "claude-opus-4-7"},
+                    "api_key_set": {"type": "boolean", "description": "True if an API key is stored; the key itself is never returned", "example": True},
+                    "base_url":    {"type": "string",  "nullable": True, "example": "http://localhost:11434/v1"},
+                    "max_tokens":  {"type": "integer", "example": 8192},
+                    "is_active":   {"type": "boolean", "example": True},
+                    "updated_at":  {"type": "string",  "format": "date-time"},
+                },
+            },
+            "LLMConfigWrite": {
+                "type": "object",
+                "properties": {
+                    "provider":   {"type": "string", "enum": ["anthropic", "openai", "ollama"], "example": "anthropic"},
+                    "model":      {"type": "string", "example": "claude-opus-4-7"},
+                    "api_key":    {"type": "string", "description": "Omit or send empty string to keep the existing key", "example": "sk-ant-..."},
+                    "base_url":   {"type": "string", "nullable": True, "example": "http://localhost:11434/v1"},
+                    "max_tokens": {"type": "integer", "example": 8192},
+                },
+            },
+            "AttackPlanTTP": {
+                "type": "object",
+                "properties": {
+                    "mitre_id":      {"type": "string",  "example": "T1059.001"},
+                    "name":          {"type": "string",  "example": "PowerShell"},
+                    "tactic":        {"type": "string",  "example": "Execution"},
+                    "justification": {"type": "string",  "example": "Report mentions use of encoded PowerShell commands"},
+                    "in_library":    {"type": "boolean", "description": "Whether this technique exists in the local TTP library", "example": True},
+                    "ttp_id":        {"type": "integer", "nullable": True, "description": "Library TTP id when in_library is true", "example": 42},
+                },
+            },
+            "AppSettings": {
+                "type": "object",
+                "description": "Key/value map of application settings. Unknown keys are ignored on write.",
+                "properties": {
+                    "mitre_tactics_url":         {"type": "string", "nullable": True, "description": "Direct URL to Enterprise tactics XLSX"},
+                    "mitre_techniques_url":      {"type": "string", "nullable": True, "description": "Direct URL to Enterprise techniques XLSX"},
+                    "mitre_ics_tactics_url":     {"type": "string", "nullable": True, "description": "Direct URL to ICS tactics XLSX"},
+                    "mitre_ics_techniques_url":  {"type": "string", "nullable": True, "description": "Direct URL to ICS techniques XLSX"},
+                    "mitre_mobile_tactics_url":  {"type": "string", "nullable": True, "description": "Direct URL to Mobile tactics XLSX"},
+                    "mitre_mobile_techniques_url": {"type": "string", "nullable": True, "description": "Direct URL to Mobile techniques XLSX"},
+                },
+            },
         },
         "responses": {
             "Unauthorized": {
@@ -296,15 +344,17 @@ SPEC = {
         },
     },
     "tags": [
-        {"name": "Auth",      "description": "Login, signup, and session management"},
-        {"name": "Exercises", "description": "Purple-team exercise lifecycle"},
-        {"name": "Entries",   "description": "TTP exercise entries (red + blue team data)"},
-        {"name": "TTPs",      "description": "MITRE ATT&CK technique library"},
-        {"name": "Tags",      "description": "Labels applied to exercises and entries"},
-        {"name": "Tactics",   "description": "MITRE ATT&CK tactics"},
-        {"name": "MITRE",     "description": "ATT&CK framework data refresh"},
-        {"name": "Images",    "description": "Screenshots attached to exercise entries"},
-        {"name": "Admin",     "description": "User management — admin role required"},
+        {"name": "Auth",         "description": "Login, signup, and session management"},
+        {"name": "Exercises",    "description": "Purple-team exercise lifecycle"},
+        {"name": "Entries",      "description": "TTP exercise entries (red + blue team data)"},
+        {"name": "TTPs",         "description": "MITRE ATT&CK technique library"},
+        {"name": "Tags",         "description": "Labels applied to exercises and entries"},
+        {"name": "Tactics",      "description": "MITRE ATT&CK tactics"},
+        {"name": "MITRE",        "description": "ATT&CK framework data refresh (Enterprise, ICS, Mobile)"},
+        {"name": "Images",       "description": "Screenshots attached to exercise entries"},
+        {"name": "Attack Plan",  "description": "LLM-powered threat report analysis and exercise generation"},
+        {"name": "Settings",     "description": "Application configuration — admin role required"},
+        {"name": "Admin",        "description": "User management — admin role required"},
     ],
     "paths": {
         # ── AUTH ──────────────────────────────────────────────────────────────
@@ -696,14 +746,48 @@ SPEC = {
             },
         },
         # ── TTPs ──────────────────────────────────────────────────────────────
+        "/api/ttps/coverage": {
+            "get": {
+                "tags": ["TTPs"],
+                "summary": "Get TTP coverage across all exercises",
+                "description": (
+                    "Returns a map of MITRE IDs to outcome counts aggregated across every exercise. "
+                    "Used to colour-code the dashboard ATT&CK coverage matrix."
+                ),
+                "responses": {
+                    "200": {
+                        "description": "Coverage map",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "total":    {"type": "integer"},
+                                            "detected": {"type": "integer"},
+                                            "missed":   {"type": "integer"},
+                                            "partial":  {"type": "integer"},
+                                        },
+                                    },
+                                    "example": {"T1059.001": {"total": 5, "detected": 3, "missed": 1, "partial": 1}},
+                                }
+                            }
+                        },
+                    },
+                    "401": {"$ref": "#/components/responses/Unauthorized"},
+                },
+            }
+        },
         "/api/ttps/": {
             "get": {
                 "tags": ["TTPs"],
                 "summary": "List TTPs",
                 "parameters": [
-                    {"name": "search",   "in": "query", "schema": {"type": "string"}, "description": "Full-text search on MITRE ID and technique name"},
-                    {"name": "tactic",   "in": "query", "schema": {"type": "string"}, "description": "Filter by tactic name"},
-                    {"name": "platform", "in": "query", "schema": {"type": "string"}, "description": "Filter by platform (e.g. Windows)"},
+                    {"name": "search",    "in": "query", "schema": {"type": "string"}, "description": "Full-text search on MITRE ID and technique name"},
+                    {"name": "tactic",    "in": "query", "schema": {"type": "string"}, "description": "Filter by tactic name"},
+                    {"name": "platform",  "in": "query", "schema": {"type": "string"}, "description": "Filter by platform (e.g. Windows)"},
+                    {"name": "framework", "in": "query", "schema": {"type": "string", "enum": ["enterprise", "ics", "mobile"]}, "description": "Filter by ATT&CK framework"},
                 ],
                 "responses": {
                     "200": {
@@ -741,6 +825,7 @@ SPEC = {
                                     "tactic":      {"type": "string", "example": "Execution"},
                                     "description": {"type": "string"},
                                     "platform":    {"type": "string", "example": "Windows,Linux"},
+                                    "framework":   {"type": "string", "enum": ["enterprise", "ics", "mobile"], "example": "enterprise"},
                                 },
                             }
                         }
@@ -884,6 +969,9 @@ SPEC = {
             "get": {
                 "tags": ["Tactics"],
                 "summary": "List MITRE ATT&CK tactics",
+                "parameters": [
+                    {"name": "framework", "in": "query", "schema": {"type": "string", "enum": ["enterprise", "ics", "mobile"]}, "description": "Filter by ATT&CK framework"},
+                ],
                 "responses": {
                     "200": {
                         "description": "Tactic list",
@@ -902,25 +990,59 @@ SPEC = {
             "post": {
                 "tags": ["MITRE"],
                 "summary": "Refresh ATT&CK data",
-                "description": "Downloads the latest MITRE ATT&CK enterprise framework and updates the TTP and Tactic tables. Roles: admin only.",
+                "description": (
+                    "Downloads MITRE ATT&CK Excel files and updates the TTP and Tactic tables. "
+                    "Omit `framework` to refresh all three frameworks (Enterprise, ICS, Mobile). "
+                    "Frameworks with no URL configured in Settings are skipped and their error is returned "
+                    "in the `errors` map without aborting the others. Roles: admin only."
+                ),
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "framework": {"type": "string", "enum": ["enterprise", "ics", "mobile"], "description": "Refresh only this framework; omit to refresh all"},
+                                },
+                            }
+                        }
+                    },
+                },
                 "responses": {
                     "200": {
-                        "description": "Refresh result",
+                        "description": "Refresh result per framework",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "tactics_updated":    {"type": "integer"},
+                                            "techniques_updated": {"type": "integer"},
+                                        },
+                                    },
                                     "properties": {
-                                        "tactics_updated":    {"type": "integer"},
-                                        "techniques_updated": {"type": "integer"},
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {"type": "string"},
+                                            "description": "Per-framework error messages for frameworks that could not be refreshed",
+                                        }
+                                    },
+                                    "example": {
+                                        "enterprise": {"tactics_updated": 14, "techniques_updated": 785},
+                                        "ics":         {"tactics_updated": 12, "techniques_updated": 83},
+                                        "errors":      {"mobile": "No URL configured for mobile techniques."},
                                     },
                                 }
                             }
                         },
                     },
+                    "400": {"description": "Invalid framework value"},
                     "401": {"$ref": "#/components/responses/Unauthorized"},
                     "403": {"$ref": "#/components/responses/Forbidden"},
-                    "500": {"description": "Upstream MITRE fetch failed"},
+                    "500": {"description": "Unexpected server error"},
                 },
             }
         },
@@ -998,6 +1120,192 @@ SPEC = {
                     "401": {"$ref": "#/components/responses/Unauthorized"},
                     "403": {"$ref": "#/components/responses/Forbidden"},
                     "404": {"$ref": "#/components/responses/NotFound"},
+                },
+            },
+        },
+        # ── ATTACK PLAN ───────────────────────────────────────────────────────
+        "/api/attack-plan/config": {
+            "get": {
+                "tags": ["Attack Plan"],
+                "summary": "Get LLM configuration",
+                "description": "Returns the active LLM configuration. The API key is never included in the response. Roles: admin only.",
+                "responses": {
+                    "200": {
+                        "description": "Active LLM config, or null if none is set",
+                        "content": {"application/json": {"schema": {"oneOf": [{"$ref": "#/components/schemas/LLMConfig"}, {"type": "null"}]}}},
+                    },
+                    "401": {"$ref": "#/components/responses/Unauthorized"},
+                    "403": {"$ref": "#/components/responses/Forbidden"},
+                },
+            },
+            "put": {
+                "tags": ["Attack Plan"],
+                "summary": "Update LLM configuration",
+                "description": (
+                    "Creates or updates the active LLM configuration. "
+                    "Omit `api_key` or send an empty string to keep the existing key unchanged. "
+                    "Roles: admin only."
+                ),
+                "requestBody": {
+                    "required": True,
+                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/LLMConfigWrite"}}},
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated LLM config",
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/LLMConfig"}}},
+                    },
+                    "401": {"$ref": "#/components/responses/Unauthorized"},
+                    "403": {"$ref": "#/components/responses/Forbidden"},
+                },
+            },
+        },
+        "/api/attack-plan/analyze": {
+            "post": {
+                "tags": ["Attack Plan"],
+                "summary": "Analyse a threat report",
+                "description": (
+                    "Submits a threat report to the configured LLM and extracts MITRE ATT&CK techniques. "
+                    "Accepts three source types:\n\n"
+                    "- **url** — JSON body `{\"source_type\": \"url\", \"url\": \"https://...\"}`. "
+                    "The server fetches and strips the page HTML.\n"
+                    "- **text** — JSON body `{\"source_type\": \"text\", \"text\": \"...\"}`. "
+                    "Raw report text (max ~50 000 chars sent to LLM).\n"
+                    "- **pdf** — `multipart/form-data` with fields `source_type=pdf` and `file=<binary>`.\n\n"
+                    "Roles: admin, red_team."
+                ),
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["source_type"],
+                                "properties": {
+                                    "source_type": {"type": "string", "enum": ["url", "text"]},
+                                    "url":         {"type": "string", "format": "uri", "example": "https://thedfirreport.com/2025/01/01/example/"},
+                                    "text":        {"type": "string", "example": "Adversary used Mimikatz to dump credentials..."},
+                                },
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["source_type", "file"],
+                                "properties": {
+                                    "source_type": {"type": "string", "enum": ["pdf"]},
+                                    "file":        {"type": "string", "format": "binary"},
+                                },
+                            }
+                        },
+                    },
+                },
+                "responses": {
+                    "200": {
+                        "description": "Extracted techniques",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ttps": {"type": "array", "items": {"$ref": "#/components/schemas/AttackPlanTTP"}},
+                                    },
+                                }
+                            }
+                        },
+                    },
+                    "400": {"description": "Missing required field"},
+                    "401": {"$ref": "#/components/responses/Unauthorized"},
+                    "403": {"$ref": "#/components/responses/Forbidden"},
+                    "422": {"description": "No active LLM configuration or LLM call failed"},
+                    "500": {"description": "Unexpected analysis error"},
+                },
+            }
+        },
+        "/api/attack-plan/convert": {
+            "post": {
+                "tags": ["Attack Plan"],
+                "summary": "Convert attack plan to exercise",
+                "description": (
+                    "Creates a new exercise from an attack plan. "
+                    "TTPs that exist in the local library are added as entries with `attack_path_include=true`. "
+                    "TTPs not found in the library are silently skipped. "
+                    "Roles: admin, red_team."
+                ),
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name", "ttps"],
+                                "properties": {
+                                    "name":        {"type": "string",  "example": "Lunar Spider Intrusion Simulation"},
+                                    "description": {"type": "string",  "example": "Based on DFIR Report 2025-09-29"},
+                                    "ttps": {
+                                        "type": "array",
+                                        "items": {"$ref": "#/components/schemas/AttackPlanTTP"},
+                                    },
+                                },
+                            }
+                        }
+                    },
+                },
+                "responses": {
+                    "201": {
+                        "description": "Exercise created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exercise_id": {"type": "integer", "example": 7},
+                                        "name":        {"type": "string",  "example": "Lunar Spider Intrusion Simulation"},
+                                    },
+                                }
+                            }
+                        },
+                    },
+                    "400": {"description": "name or ttps missing"},
+                    "401": {"$ref": "#/components/responses/Unauthorized"},
+                    "403": {"$ref": "#/components/responses/Forbidden"},
+                    "500": {"description": "Unexpected error creating exercise"},
+                },
+            }
+        },
+        # ── SETTINGS ──────────────────────────────────────────────────────────
+        "/api/settings/": {
+            "get": {
+                "tags": ["Settings"],
+                "summary": "Get application settings",
+                "description": "Returns all configurable application settings as a key/value map. Roles: admin only.",
+                "responses": {
+                    "200": {
+                        "description": "Settings map",
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppSettings"}}},
+                    },
+                    "401": {"$ref": "#/components/responses/Unauthorized"},
+                    "403": {"$ref": "#/components/responses/Forbidden"},
+                },
+            },
+            "put": {
+                "tags": ["Settings"],
+                "summary": "Update application settings",
+                "description": (
+                    "Updates one or more settings. Send `null` for a key to revert it to the built-in default. "
+                    "Unknown keys are silently ignored. Roles: admin only."
+                ),
+                "requestBody": {
+                    "required": True,
+                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppSettings"}}},
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated settings map",
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppSettings"}}},
+                    },
+                    "401": {"$ref": "#/components/responses/Unauthorized"},
+                    "403": {"$ref": "#/components/responses/Forbidden"},
                 },
             },
         },
