@@ -1,9 +1,38 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
+from sqlalchemy import func
+from app.extensions import db
+from app.models.exercise_entry import ExerciseEntry
+from app.models.ttp import TTP
 from app.services import ttp_service
 from app.utils.auth import require_roles, ADMIN
 
 bp = Blueprint("ttps", __name__, url_prefix="/api/ttps")
+
+
+@bp.get("/coverage")
+@jwt_required()
+def get_coverage():
+    rows = (
+        db.session.query(
+            TTP.mitre_id,
+            ExerciseEntry.outcome,
+            func.count(ExerciseEntry.id).label("cnt"),
+        )
+        .join(ExerciseEntry, TTP.id == ExerciseEntry.ttp_id)
+        .group_by(TTP.mitre_id, ExerciseEntry.outcome)
+        .all()
+    )
+
+    coverage = {}
+    for mitre_id, outcome, cnt in rows:
+        if mitre_id not in coverage:
+            coverage[mitre_id] = {"total": 0, "detected": 0, "missed": 0, "partial": 0}
+        coverage[mitre_id]["total"] += cnt
+        if outcome in ("detected", "missed", "partial"):
+            coverage[mitre_id][outcome] += cnt
+
+    return jsonify(coverage)
 
 
 @bp.get("/")

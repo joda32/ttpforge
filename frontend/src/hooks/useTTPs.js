@@ -4,6 +4,9 @@ import * as api from "../api/ttps";
 export const useTTPs = (params) =>
   useQuery({ queryKey: ["ttps", params], queryFn: () => api.getTTPs(params), staleTime: 30000 });
 
+export const useTTPCoverage = () =>
+  useQuery({ queryKey: ["ttp-coverage"], queryFn: api.getTTPCoverage, staleTime: 30000 });
+
 export const useCreateTTP = () => {
   const qc = useQueryClient();
   return useMutation({

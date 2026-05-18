@@ -1,4 +1,5 @@
 from datetime import date
+from sqlalchemy import func
 from app.extensions import db
 from app.models.exercise import Exercise
 from app.models.exercise_entry import ExerciseEntry
@@ -6,7 +7,28 @@ from app.services.tag_service import set_tags
 
 
 def list_exercises():
-    return Exercise.query.order_by(Exercise.created_at.desc()).all()
+    last_entry_sq = (
+        db.session.query(
+            ExerciseEntry.exercise_id,
+            func.max(ExerciseEntry.updated_at).label("last_entry_at"),
+        )
+        .group_by(ExerciseEntry.exercise_id)
+        .subquery()
+    )
+
+    rows = (
+        db.session.query(Exercise, last_entry_sq.c.last_entry_at)
+        .outerjoin(last_entry_sq, Exercise.id == last_entry_sq.c.exercise_id)
+        .order_by(Exercise.created_at.desc())
+        .all()
+    )
+
+    exercises = []
+    for ex, last_entry_at in rows:
+        d = ex.to_dict()
+        d["last_entry_at"] = last_entry_at.isoformat() if last_entry_at else None
+        exercises.append(d)
+    return exercises
 
 
 def get_exercise(exercise_id):
@@ -83,6 +105,12 @@ def get_summary(exercise_id):
         for tactic, counts in tactic_map.items()
     }
 
+    last_entry_at = None
+    if entries:
+        latest = max((e.updated_at for e in entries if e.updated_at), default=None)
+        if latest:
+            last_entry_at = latest.isoformat()
+
     return {
         "exercise_id": exercise_id,
         "total_entries": total,
@@ -92,6 +120,7 @@ def get_summary(exercise_id):
         "detection_rate": round(detected_count / total, 3) if total else 0,
         "avg_time_to_detect_minutes": avg_time,
         "tactic_breakdown": tactic_breakdown,
+        "last_entry_at": last_entry_at,
     }
 
 

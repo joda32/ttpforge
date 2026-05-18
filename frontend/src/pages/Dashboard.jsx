@@ -3,6 +3,7 @@ import { useExercises, useExerciseSummary } from "../hooks/useExercises";
 import PageHeader from "../components/layout/PageHeader";
 import Badge from "../components/ui/Badge";
 import Spinner from "../components/ui/Spinner";
+import GlobalMitreMatrix from "../components/dashboard/GlobalMitreMatrix";
 
 // ── colour tokens (matches Exercises page) ────────────────────────────────────
 const CARD_STYLE = {
@@ -20,7 +21,6 @@ const CARD_STYLE = {
   },
 };
 
-const STATUS_ORDER = { active: 0, planned: 1, completed: 2 };
 
 // ── detection bar ─────────────────────────────────────────────────────────────
 function DetectionBar({ rate, total }) {
@@ -128,11 +128,14 @@ export default function Dashboard() {
   const completed = exercises.filter((e) => e.status === "completed").length;
   const planned   = exercises.filter((e) => e.status === "planned").length;
 
-  const sorted = [...exercises].sort((a, b) => {
-    const so = (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
-    if (so !== 0) return so;
-    return new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0);
-  });
+  // Top 4 by most recent entry activity; fall back to exercise created_at for exercises with no entries
+  const sorted = [...exercises]
+    .sort((a, b) => {
+      const ta = a.last_entry_at ?? a.created_at ?? 0;
+      const tb = b.last_entry_at ?? b.created_at ?? 0;
+      return new Date(tb) - new Date(ta);
+    })
+    .slice(0, 4);
 
   return (
     <div>
@@ -164,9 +167,9 @@ export default function Dashboard() {
           ) : (
             <>
               <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                Exercise Summary
+                Most Recent Activity
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-3 min-w-0">
                 {sorted.map((ex) => (
                   <ExerciseCard key={ex.id} ex={ex} />
                 ))}
@@ -175,6 +178,11 @@ export default function Dashboard() {
           )}
         </>
       )}
+
+      {/* Full enterprise ATT&CK coverage matrix */}
+      <div className="mt-10">
+        <GlobalMitreMatrix />
+      </div>
     </div>
   );
 }

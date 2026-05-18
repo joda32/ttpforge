@@ -10,7 +10,7 @@ bp = Blueprint("exercises", __name__, url_prefix="/api/exercises")
 @jwt_required()
 def list_exercises():
     exercises = exercise_service.list_exercises()
-    return jsonify({"data": [e.to_dict() for e in exercises], "total": len(exercises)})
+    return jsonify({"data": exercises, "total": len(exercises)})
 
 
 @bp.post("/")
