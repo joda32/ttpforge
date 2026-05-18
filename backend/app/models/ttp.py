@@ -11,6 +11,7 @@ class TTP(db.Model):
     tactic = db.Column(db.String(100), nullable=False, index=True)
     description = db.Column(db.Text)
     platform = db.Column(db.String(200))
+    framework = db.Column(db.String(20), nullable=False, default="enterprise", index=True)
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -29,4 +30,5 @@ class TTP(db.Model):
             "tactics": [t.to_dict() for t in self.tactics],
             "description": self.description,
             "platform": self.platform,
+            "framework": self.framework,
         }

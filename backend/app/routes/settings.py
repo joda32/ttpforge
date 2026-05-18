@@ -6,7 +6,11 @@ from app.utils.auth import require_roles, ADMIN
 bp = Blueprint("settings", __name__, url_prefix="/api/settings")
 
 # Keys that are allowed to be read/written via the API
-ALLOWED_KEYS = {"mitre_tactics_url", "mitre_techniques_url"}
+ALLOWED_KEYS = {
+    "mitre_tactics_url",        "mitre_techniques_url",
+    "mitre_ics_tactics_url",    "mitre_ics_techniques_url",
+    "mitre_mobile_tactics_url", "mitre_mobile_techniques_url",
+}
 
 
 @bp.get("/")

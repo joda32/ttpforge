@@ -2,7 +2,7 @@ from app.extensions import db
 from app.models.ttp import TTP
 
 
-def list_ttps(search=None, tactic=None, platform=None):
+def list_ttps(search=None, tactic=None, platform=None, framework=None):
     q = TTP.query
     if search:
         term = f"%{search}%"
@@ -13,6 +13,8 @@ def list_ttps(search=None, tactic=None, platform=None):
         q = q.filter(TTP.tactic == tactic)
     if platform:
         q = q.filter(TTP.platform.ilike(f"%{platform}%"))
+    if framework:
+        q = q.filter(TTP.framework == framework)
     ttps = q.order_by(TTP.tactic, TTP.mitre_id).all()
     return ttps
 
@@ -28,6 +30,7 @@ def create_ttp(data):
         tactic=data["tactic"],
         description=data.get("description"),
         platform=data.get("platform"),
+        framework=data.get("framework", "enterprise"),
     )
     db.session.add(ttp)
     db.session.commit()
@@ -49,6 +52,8 @@ def delete_ttp(ttp_id):
     db.session.commit()
 
 
-def get_distinct_tactics():
-    rows = db.session.query(TTP.tactic).distinct().order_by(TTP.tactic).all()
-    return [r[0] for r in rows]
+def get_distinct_tactics(framework=None):
+    q = db.session.query(TTP.tactic).distinct()
+    if framework:
+        q = q.filter(TTP.framework == framework)
+    return [r[0] for r in q.order_by(TTP.tactic).all()]

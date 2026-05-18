@@ -1,4 +1,5 @@
 import client from "./client";
 
-export const listTactics = () => client.get("/api/tactics/").then((r) => r.data);
-export const refreshMitre = () => client.post("/api/mitre/refresh").then((r) => r.data);
+export const listTactics = (params) => client.get("/api/tactics/", { params }).then((r) => r.data);
+export const refreshMitre = (framework) =>
+  client.post("/api/mitre/refresh", framework ? { framework } : {}).then((r) => r.data);

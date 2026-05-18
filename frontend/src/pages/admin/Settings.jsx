@@ -43,34 +43,60 @@ function GeneralTab() {
 
 // ── TTP Library tab ────────────────────────────────────────────────────────────
 
-const MITRE_TACTICS_DEFAULT =
-  "https://github.com/CyberCX-STA/PurpleOps-Deps/raw/master/attack.mitre/15.1/enterprise-attack-v15.1-tactics.xlsx";
-const MITRE_TECHNIQUES_DEFAULT =
-  "https://github.com/CyberCX-STA/PurpleOps-Deps/raw/master/attack.mitre/15.1/enterprise-attack-v15.1-techniques.xlsx";
+const URL_FIELDS = [
+  {
+    section: "Enterprise ATT&CK",
+    color:   "text-blue-400",
+    fields: [
+      { key: "mitre_tactics_url",    label: "Tactics XLSX URL",    hint: "e.g. …/enterprise-attack-v19.1-tactics.xlsx",    placeholder: "https://github.com/CyberCX-STA/PurpleOps-Deps/raw/master/attack.mitre/15.1/enterprise-attack-v15.1-tactics.xlsx" },
+      { key: "mitre_techniques_url", label: "Techniques XLSX URL", hint: "e.g. …/enterprise-attack-v19.1-techniques.xlsx", placeholder: "https://github.com/CyberCX-STA/PurpleOps-Deps/raw/master/attack.mitre/15.1/enterprise-attack-v15.1-techniques.xlsx" },
+    ],
+  },
+  {
+    section: "ICS ATT&CK",
+    color:   "text-amber-400",
+    fields: [
+      { key: "mitre_ics_tactics_url",    label: "ICS Tactics XLSX URL",    hint: "e.g. …/ics-attack-v17.0-tactics.xlsx",    placeholder: "https://attack.mitre.org/docs/attack-excel-files/v17.0/ics-attack/ics-attack-v17.0-tactics.xlsx" },
+      { key: "mitre_ics_techniques_url", label: "ICS Techniques XLSX URL", hint: "e.g. …/ics-attack-v17.0-techniques.xlsx", placeholder: "https://attack.mitre.org/docs/attack-excel-files/v17.0/ics-attack/ics-attack-v17.0-techniques.xlsx" },
+    ],
+  },
+  {
+    section: "Mobile ATT&CK",
+    color:   "text-violet-400",
+    fields: [
+      { key: "mitre_mobile_tactics_url",    label: "Mobile Tactics XLSX URL",    hint: "e.g. …/mobile-attack-v17.0-tactics.xlsx",    placeholder: "https://attack.mitre.org/docs/attack-excel-files/v17.0/mobile-attack/mobile-attack-v17.0-tactics.xlsx" },
+      { key: "mitre_mobile_techniques_url", label: "Mobile Techniques XLSX URL", hint: "e.g. …/mobile-attack-v17.0-techniques.xlsx", placeholder: "https://attack.mitre.org/docs/attack-excel-files/v17.0/mobile-attack/mobile-attack-v17.0-techniques.xlsx" },
+    ],
+  },
+];
+
+const EMPTY_URLS = {
+  mitre_tactics_url: "", mitre_techniques_url: "",
+  mitre_ics_tactics_url: "", mitre_ics_techniques_url: "",
+  mitre_mobile_tactics_url: "", mitre_mobile_techniques_url: "",
+};
 
 function TTPLibraryTab() {
   const { data: settings, isLoading } = useSettings();
   const { mutateAsync: save, isPending } = useUpdateSettings();
-  const [tacticsUrl,    setTacticsUrl]    = useState("");
-  const [techniquesUrl, setTechniquesUrl] = useState("");
+  const [urls, setUrls]   = useState(EMPTY_URLS);
   const [saved, setSaved] = useState(false);
   const [err, setErr]     = useState(null);
 
   useEffect(() => {
     if (!settings) return;
-    setTacticsUrl(settings.mitre_tactics_url ?? "");
-    setTechniquesUrl(settings.mitre_techniques_url ?? "");
+    setUrls((prev) => ({ ...prev, ...Object.fromEntries(Object.keys(EMPTY_URLS).map((k) => [k, settings[k] ?? ""])) }));
   }, [settings]);
+
+  const setUrl = (key) => (e) => setUrls((prev) => ({ ...prev, [key]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErr(null);
     setSaved(false);
     try {
-      await save({
-        mitre_tactics_url:    tacticsUrl    || null,
-        mitre_techniques_url: techniquesUrl || null,
-      });
+      const payload = Object.fromEntries(Object.entries(urls).map(([k, v]) => [k, v || null]));
+      await save(payload);
       setSaved(true);
     } catch {
       setErr("Failed to save.");
@@ -80,34 +106,29 @@ function TTPLibraryTab() {
   if (isLoading) return <Spinner />;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-2xl">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-7 max-w-2xl">
       <p className="text-xs text-slate-500">
-        Provide direct URLs to MITRE ATT&amp;CK Excel files. Leave blank to use the built-in defaults (v15.1).
+        Provide direct URLs to MITRE ATT&amp;CK Excel files for each framework. Leave blank to use built-in defaults (Enterprise v15.1). ICS and Mobile require explicit URLs.
       </p>
 
-      <div>
-        <label className="block text-sm text-slate-400 mb-1">Tactics XLSX URL</label>
-        <input
-          type="url"
-          value={tacticsUrl}
-          onChange={(e) => setTacticsUrl(e.target.value)}
-          placeholder={MITRE_TACTICS_DEFAULT}
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-slate-100 text-sm placeholder:text-slate-600"
-        />
-        <p className="text-xs text-slate-600 mt-1">e.g. <code>…/enterprise-attack-v19.1-tactics.xlsx</code></p>
-      </div>
-
-      <div>
-        <label className="block text-sm text-slate-400 mb-1">Techniques XLSX URL</label>
-        <input
-          type="url"
-          value={techniquesUrl}
-          onChange={(e) => setTechniquesUrl(e.target.value)}
-          placeholder={MITRE_TECHNIQUES_DEFAULT}
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-slate-100 text-sm placeholder:text-slate-600"
-        />
-        <p className="text-xs text-slate-600 mt-1">e.g. <code>…/enterprise-attack-v19.1-techniques.xlsx</code></p>
-      </div>
+      {URL_FIELDS.map(({ section, color, fields }) => (
+        <div key={section} className="flex flex-col gap-4">
+          <h3 className={`text-xs font-semibold uppercase tracking-wider ${color}`}>{section}</h3>
+          {fields.map(({ key, label, hint, placeholder }) => (
+            <div key={key}>
+              <label className="block text-sm text-slate-400 mb-1">{label}</label>
+              <input
+                type="url"
+                value={urls[key]}
+                onChange={setUrl(key)}
+                placeholder={placeholder}
+                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-slate-100 text-sm placeholder:text-slate-600"
+              />
+              <p className="text-xs text-slate-600 mt-1">{hint}</p>
+            </div>
+          ))}
+        </div>
+      ))}
 
       {err  && <p className="text-red-400 text-sm">{err}</p>}
       {saved && <p className="text-green-400 text-sm">Saved.</p>}

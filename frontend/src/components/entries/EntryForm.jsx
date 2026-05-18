@@ -78,7 +78,10 @@ export default function EntryForm({ initial = {}, onSubmit, onCancel, loading, u
     onSubmit(payload);
   };
 
-  const ttpOptions = ttps.map((t) => ({ value: t.id, label: `${t.mitre_id} — ${t.name}` }));
+  const ttpOptions = ttps.map((t) => ({
+    value: t.id,
+    label: `${t.framework && t.framework !== "enterprise" ? `[${t.framework.toUpperCase()}] ` : ""}${t.mitre_id} — ${t.name}`,
+  }));
   const redReadOnly  = userRole === "blue_team";
   const blueReadOnly = userRole === "red_team";
 

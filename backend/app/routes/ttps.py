@@ -38,11 +38,12 @@ def get_coverage():
 @bp.get("/")
 @jwt_required()
 def list_ttps():
-    search = request.args.get("search")
-    tactic = request.args.get("tactic")
-    platform = request.args.get("platform")
-    ttps = ttp_service.list_ttps(search=search, tactic=tactic, platform=platform)
-    tactics = ttp_service.get_distinct_tactics()
+    search    = request.args.get("search")
+    tactic    = request.args.get("tactic")
+    platform  = request.args.get("platform")
+    framework = request.args.get("framework")
+    ttps    = ttp_service.list_ttps(search=search, tactic=tactic, platform=platform, framework=framework)
+    tactics = ttp_service.get_distinct_tactics(framework=framework)
     return jsonify({"data": [t.to_dict() for t in ttps], "total": len(ttps), "tactics": tactics})
 
 

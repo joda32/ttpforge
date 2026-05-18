@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { useTTPs, useTTPCoverage } from "../../hooks/useTTPs";
+import FrameworkBadge from "../ui/FrameworkBadge";
 import Spinner from "../ui/Spinner";
+
+const FRAMEWORKS = [
+  { value: "enterprise", label: "Enterprise" },
+  { value: "ics",        label: "ICS"        },
+  { value: "mobile",     label: "Mobile"     },
+];
 
 const TACTIC_ORDER = [
   "Reconnaissance", "Resource Development", "Initial Access", "Execution",
@@ -137,7 +144,8 @@ function ParentCell({ ttp, children, coverage }) {
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function GlobalMitreMatrix() {
-  const { data: ttpData, isLoading: ttpsLoading } = useTTPs({});
+  const [framework, setFramework] = useState("enterprise");
+  const { data: ttpData, isLoading: ttpsLoading } = useTTPs({ framework });
   const { data: coverage = {}, isLoading: covLoading } = useTTPCoverage();
 
   if (ttpsLoading || covLoading) return <Spinner />;
@@ -187,9 +195,29 @@ export default function GlobalMitreMatrix() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          Enterprise ATT&amp;CK Coverage
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            ATT&amp;CK Coverage
+          </h2>
+          <div className="flex gap-1">
+            {FRAMEWORKS.map((fw) => (
+              <button
+                key={fw.value}
+                type="button"
+                onClick={() => setFramework(fw.value)}
+                className={`text-xs px-2.5 py-1 rounded border transition-colors ${
+                  framework === fw.value
+                    ? fw.value === "enterprise" ? "bg-blue-900/60 border-blue-600 text-blue-300"
+                      : fw.value === "ics"      ? "bg-amber-900/60 border-amber-600 text-amber-300"
+                      : "bg-violet-900/60 border-violet-600 text-violet-300"
+                    : "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                {fw.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex items-center gap-3 text-xs text-slate-500">
           <span><span className="text-slate-300 font-medium">{parentTTPs.length}</span> techniques</span>
           <span className="text-slate-700">·</span>
