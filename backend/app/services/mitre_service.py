@@ -3,15 +3,27 @@ from app.extensions import db
 from app.models.tactic import Tactic
 from app.models.ttp import TTP
 
-MITRE_BASE = (
+_DEFAULT_TACTICS_URL = (
     "https://github.com/CyberCX-STA/PurpleOps-Deps/raw/master/attack.mitre/15.1"
+    "/enterprise-attack-v15.1-tactics.xlsx"
 )
+_DEFAULT_TECHNIQUES_URL = (
+    "https://github.com/CyberCX-STA/PurpleOps-Deps/raw/master/attack.mitre/15.1"
+    "/enterprise-attack-v15.1-techniques.xlsx"
+)
+
+
+def _get_url(component: str) -> str:
+    from app.models.app_setting import AppSetting
+    key = "mitre_tactics_url" if component == "tactics" else "mitre_techniques_url"
+    default = _DEFAULT_TACTICS_URL if component == "tactics" else _DEFAULT_TECHNIQUES_URL
+    return AppSetting.get(key, default) or default
 
 
 def _download_workbook(component):
     import requests
     from openpyxl import load_workbook
-    url = f"{MITRE_BASE}/enterprise-attack-v15.1-{component}.xlsx"
+    url = _get_url(component)
     resp = requests.get(url, timeout=60)
     resp.raise_for_status()
     wb = load_workbook(io.BytesIO(resp.content), read_only=True)

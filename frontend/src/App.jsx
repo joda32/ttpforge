@@ -10,6 +10,8 @@ import Tags from "./pages/Tags";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import UserManagement from "./pages/admin/UserManagement";
+import Settings from "./pages/admin/Settings";
+import AttackPlanBuilder from "./pages/AttackPlanBuilder";
 
 function AppShell() {
   return (
@@ -23,9 +25,15 @@ function AppShell() {
           <Route path="/ttps" element={<TTPLibrary />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/tags" element={<Tags />} />
+          <Route path="/attack-plan" element={<AttackPlanBuilder />} />
           <Route path="/admin/users" element={
             <ProtectedRoute roles={["admin"]}>
               <UserManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute roles={["admin"]}>
+              <Settings />
             </ProtectedRoute>
           } />
           <Route path="*" element={<p className="text-slate-400">Page not found.</p>} />

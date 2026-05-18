@@ -8,6 +8,8 @@ from app.routes.images import bp as images_bp
 from app.routes.auth import bp as auth_bp
 from app.routes.admin import bp as admin_bp
 from app.routes.docs import bp as docs_bp
+from app.routes.attack_plan import bp as attack_plan_bp
+from app.routes.settings import bp as settings_bp
 
 
 def register_blueprints(app):
@@ -21,3 +23,5 @@ def register_blueprints(app):
     app.register_blueprint(tactics_bp)
     app.register_blueprint(mitre_bp)
     app.register_blueprint(images_bp)
+    app.register_blueprint(attack_plan_bp)
+    app.register_blueprint(settings_bp)

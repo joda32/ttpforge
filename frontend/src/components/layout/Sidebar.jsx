@@ -3,11 +3,12 @@ import { useAuth } from "../../hooks/useAuth";
 import logoUrl from "../../assets/ttpforge-logo-darkbg.svg";
 
 const NAV = [
-  { to: "/", label: "Dashboard", icon: "▦" },
-  { to: "/exercises", label: "Exercises", icon: "⚔" },
-  { to: "/ttps", label: "TTP Library", icon: "☰" },
-  { to: "/reports", label: "Reports", icon: "≋" },
-  { to: "/tags", label: "Tags", icon: "◈" },
+  { to: "/",             label: "Dashboard",     icon: "▦" },
+  { to: "/exercises",    label: "Exercises",      icon: "⚔" },
+  { to: "/attack-plan",  label: "Plan Builder",   icon: "⬡" },
+  { to: "/ttps",         label: "TTP Library",    icon: "☰" },
+  { to: "/reports",      label: "Reports",        icon: "≋" },
+  { to: "/tags",         label: "Tags",           icon: "◈" },
 ];
 
 const ROLE_LABELS = { admin: "Admin", red_team: "Red Teamer", blue_team: "Blue Teamer" };
@@ -50,19 +51,34 @@ export default function Sidebar() {
           </NavLink>
         ))}
         {user?.role === "admin" && (
-          <NavLink
-            to="/admin/users"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
-                isActive
-                  ? "bg-slate-700 text-slate-100 font-medium"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-              }`
-            }
-          >
-            <span className="text-base">&#128100;</span>
-            Users
-          </NavLink>
+          <>
+            <NavLink
+              to="/admin/users"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
+                  isActive
+                    ? "bg-slate-700 text-slate-100 font-medium"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                }`
+              }
+            >
+              <span className="text-base">&#128100;</span>
+              Users
+            </NavLink>
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
+                  isActive
+                    ? "bg-slate-700 text-slate-100 font-medium"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                }`
+              }
+            >
+              <span className="text-base">⚙</span>
+              Settings
+            </NavLink>
+          </>
         )}
       </nav>
       <div className="border-t border-slate-700 px-3 py-3">

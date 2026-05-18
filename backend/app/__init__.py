@@ -15,7 +15,7 @@ def create_app(config_class=Config):
     CORS(app, origins=["http://localhost:5173"])
 
     # Import models so Alembic can detect them
-    from app.models import Exercise, TTP, ExerciseEntry, User  # noqa: F401
+    from app.models import Exercise, TTP, ExerciseEntry, User, LLMConfig, AppSetting  # noqa: F401
 
     from app.routes import register_blueprints
     register_blueprints(app)
